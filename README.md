@@ -12,30 +12,29 @@
 
 需要 [Claude Code](https://claude.ai/code)。
 
-### 方式一：直接克隆（推荐）
+### 方式一：Claude Code 插件市场（推荐，自动更新）
 
 ```bash
-# 进入 Claude Code 的 skills 目录
-cd ~/.claude/skills
+# 第一步：注册市场（只需一次）
+/plugin marketplace add SIE-Operations-and-Maintenance-Team/smom-skills
 
-# 克隆本仓库
+# 第二步：安装 skill（只需一次，后续版本自动更新）
+/plugin install sie-smom@smom-skills
+```
+
+### 方式二：直接克隆
+
+```bash
+cd ~/.claude/skills
 git clone https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom.git
-
-# 完成！下次涉及 SMOM 代码时自动激活
 ```
 
-### 方式二：手动复制
+### 方式三：一键更新脚本（传统方式适用）
 
 ```bash
-# 将整个 sie-smom 文件夹复制到 skills 目录
-cp -r sie-smom ~/.claude/skills/
-```
-
-### 方式三：Git Submodule
-
-```bash
-cd ~/.claude/skills
-git submodule add https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom.git
+# 安装 smom-skills 索引仓库后运行
+.\update.ps1            # Windows
+./update.sh             # macOS / Linux
 ```
 
 ---
@@ -66,6 +65,7 @@ Skill 内置的**防幻写协议**保证 AI 在给出建议前先查阅参考底
 ```
 sie-smom/
 ├── SKILL.md                         # 入口文件：平台本质 + 防幻写协议 + 10 条红线 + 路由表
+├── plugin.json                      # Claude Code 插件元数据
 ├── manifest.json                    # Skill 元数据
 ├── references/
 │   ├── 01-architecture.md           # 架构总览（分层/Module/DataProvider/IoC）
