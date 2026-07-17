@@ -1,0 +1,13 @@
+{
+  "name": "sie-smom",
+  "version": "1.0.0",
+  "description": "SIE SMOM 平台开发专家 - .NET 6.0 MES + SIE 自研框架",
+  "author": "SIE Operations & Maintenance Team",
+  "license": "MIT",
+  "tags": ["smom", "sie", "mes", "dotnet", "csharp", "wpf", "mssql", "oracle", "claude-skill"],
+  "homepage": "https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom",
+  "claude": {
+    "entry": "SKILL.md",
+    "minVersion": "1.0.0"
+  }
+}
