@@ -81,3 +81,36 @@ public class ItemController : DomainController
 | .IsNotEmpty() | 字符串非空判断 |
 | .IsNullOrEmpty() | 字符串为空判断 |
 | .t() | JS前端翻译 |
+
+---
+
+## 五、常见坑
+
+- **ViewModel 分页失效**：界面查询方法自己做数据转换时，返回对象需 `SetTotalCount` 设置总数，否则分页失效（manual/11-ajax-deploy-db.md 41.6）。
+- **报表 / Echart 返回类型**：返回数据用 `List`，**不要返回 `EntityList`**（框架对 `EntityList` 返回做了特殊处理）（manual/11-ajax-deploy-db.md 42.2）。
+
+---
+
+## 六、JS 事件与动态列 API（manual/09-api-js-events.md）
+
+**事件订阅 / 激活 / 注销**（mon / fireEvent / mun）：
+
+```javascript
+this.view.mon(this.view, eventName, function () { /* ... */ }, { single: true });  // 订阅
+this.fireEvent(eventName, this);                                                    // 激活
+this.mun(this, eventName);                                                         // 注销
+```
+
+**关闭前事件**：事件名 `beforeClosewin`，在 Behavior 的 `onViewReady` 注册 `view.mon(view, 'beforeClosewin', this.beforeClosewin)`。
+
+**GridPanel 动态列**：
+
+```javascript
+var gridPanel = view.getControl();
+gridPanel.addColumn({ name: 'alive', type: 'boolean', defaultValue: true }, { header: '动态列', dataIndex: 'alive' });
+gridPanel.removeColumn(colIndex - 1);  // 框架含行号列，索引需减 1
+```
+
+**定义命令（JS 端）**：`SIE.defineCommand('全命名空间', { extend: '...', meta: {...}, execute: function(view) {...} })`
+
+**Api 开放接口**：方法标记 `[ApiService]`，参数 `[ApiParameter]`，返回 `[ApiReturn]`；运行 host / 部署后可在 API 查到对应方法、请求格式和返回值。

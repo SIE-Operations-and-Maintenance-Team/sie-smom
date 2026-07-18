@@ -74,7 +74,7 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 
 | 任务 | 先读（curated） | 再查（manual） |
 |---|---|---|
-| 架构 / 分层 / Module 注册 / DataProvider / IoC | `01-architecture.md` | `01-dev-standards.md`、`02-snest-platform.md` |
+| 架构 / 分层 / Module 注册 / DataProvider / IoC / 类命名规范 / 属性命名陷阱 | `01-architecture.md` | `01-dev-standards.md`、`02-snest-platform.md` |
 | 实体建模 / 属性 / 标签 / 配置 / UML-ModelFirst | `03-entity-data.md` | `03-entity-modeling.md` |
 | 实体验证规则 / DAO | `03-entity-data.md` | `06-validation-events.md` |
 | 后端 Controller / 查询规范 | `05-controller.md` | `05-commands.md` |
@@ -105,8 +105,8 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 RT.Service.Resolve<T>()              // IoC 解析服务/控制器
 RT.Service.Register(iface, impl, ServiceLifeStyle.Singleton)  // 注册（在 Module.Initialize）
 RT.IdentityId / RT.InvOrg / RT.Config.Get<T>(key)
-RF.Save(entity) / RF.GetById<T>(id) / RF.GetAll<T>() / RF.BatchInsert(list)
-DB.Query<T>() / DB.Update<T>() / DB.Delete<T>() / DB.TransactionScope(connStr)
+RF.Save(entity) / RF.GetById<T>(id) / RF.GetAll<T>() / RF.BatchInsert(list) / RF.Find<T>()  // Find<T>() 返回实体仓库单例（见 references/03-entity-data.md）
+DB.Query<T>() / DB.Update<T>() / DB.Delete<T>() / DB.TransactionScope(connStr) / DB.AutonomousTransactionScope(connStr)  // 自治事务，不受嵌套影响（见 manual/11-ajax-deploy-db.md 41.4）
 Query<T>()                            // DomainController 内构建 LINQ 查询
 SplitContains(fn) / SplitDataExecute(list, batch=>fn)  // 大集合分批 IN
 .L10N() / .L10nFormat(args)           // C# 国际化
@@ -139,6 +139,8 @@ SIE.Ajax({...})                       // 前端 ajax 请求后台方法
 | INV_ORG_ID | int? | INT NULL | NUMBER(10,0) | 所属机构 |
 | IS_PHANTOM | bool | BIT NOT NULL DEFAULT 0 | NUMBER(1,0) DEFAULT 0 NOT NULL | 逻辑删除标记 |
 
+> IS_PHANTOM / INV_ORG_ID / SYNC_ID 等列通过实体插件启用（`Meta.EnablePhantoms / EnableInvOrg / EnableDataSync`，在 `EntityConfig.ConfigMeta()` 中），详见 `references/03-entity-data.md` 第九节。业务实体继承 `DataEntity` 时部分插件可能已默认启用，拿不准时查 manual/03-entity-modeling.md 6.8 或框架源码，勿臆测。
+
 **类型映射（C# → DB）**：
 
 | C# | MSSQL | Oracle |
@@ -161,9 +163,9 @@ SIE.Ajax({...})                       // 前端 ajax 请求后台方法
 
 ```
 references/
-├── 01-architecture.md         # 架构总览（分层/Module/DataProvider/IoC）
+├── 01-architecture.md         # 架构总览（分层/Module/DataProvider/IoC/类命名规范/属性命名陷阱/环境搭建）
 ├── 02-wpf.md                  # WPF 组件规范
-├── 03-entity-data.md          # 实体与数据层（属性/验证/DAO）
+├── 03-entity-data.md          # 实体与数据层（属性5类型/引用主从/EntityConfig/插件/验证/DAO）
 ├── 04-web-viewconfig.md       # Web ViewConfig 规范
 ├── 05-controller.md           # 后端 Controller 规范
 ├── 06-web-frontend.md         # Web 前端规范（DataQueryer/ExtJS）

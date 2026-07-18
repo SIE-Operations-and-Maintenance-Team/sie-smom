@@ -136,3 +136,19 @@ RT.Service.Resolve<XXX控制器类>().对应方法();
 var emp = RT.Service.Resolve<CommonController>().GetData<Employee>(p => p.Name == config.EmployeeName);
 var items = RT.Service.Resolve<CommonController>().GetDatas<Item>(p => p.State == State.Enable);
 ```
+
+---
+
+## 6. 命令基类与可重写方法（manual/05-commands.md）
+
+命令跨前后端：JS 端控制交互/创建实体，CS 端执行业务。
+
+| 基类 | 端 | 可重写方法 |
+|---|---|---|
+| `ViewCommand`（添加/修改/删除/查询等） | JS | `canExecute(view)` / `createNewItem()` / `onItemCreated(entity)` / `getEditEntity()` |
+| `ViewCommand` | CS | `Excute(ViewArgs args, string scope)` |
+| `SaveCommand`（表格保存） | CS | `Excute` / `DoSave(EntityList)` / `OnSaving` / `OnSaved` |
+| `FormSaveCommand`（表单保存） | CS | `Excute` / `DoSave(Entity)` / `OnSaving` / `OnSaved` / `OnValidation` |
+| `ImportCommandBase`（导入） | CS | `GetImportCompleted()` / `GetImportHandleType()` |
+
+> 方法名 `Excute` 为 manual 原文（框架实际拼写，非 `Execute`），重写时需一致。命令重写**必须加 meta 且不能换行**；前后端有交互时 JS/CS 全命名空间完全一致（见 `01-architecture.md` 命令类规范）。

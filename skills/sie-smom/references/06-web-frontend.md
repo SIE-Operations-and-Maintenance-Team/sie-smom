@@ -200,3 +200,40 @@ public class XxxViewConfig : WebViewConfig<XxxEntity>
 - 前端（ViewConfig、Command、Behavior、DataQueryer）必须通过 `RT.Service.Resolve<XxxController>()` 调用后端控制器获取数据
 - 数据访问逻辑必须封装在领域层（SIE.{Module}）的 Controller 中
 - 这样确保数据访问的统一性、安全性和可维护性
+
+---
+
+## 九、提交事件（manual/06-validation-events.md 15.3）
+
+保存实体前/后触发，**需实体元数据更新才生效**：
+
+| 事件 | 命名 | 基类 | 时机 |
+|---|---|---|---|
+| 提交前 | `XxxOnSubmitting` | `OnSubmitting<T>` | 保存前 |
+| 提交后 | `XxxOnSubmitted` | `OnSubmitted<T>` | 保存后 |
+
+- 类名加事件名称和描述；运行后初始化元数据才在实体元数据生成记录。
+- 表 `MDA_ENTITY_SUBMIT_EVENT`，`DISCRIMINATOR='A'` 提交前、`'B'` 提交后。
+- 每次修改提交事件必须重新更新实体元数据。
+
+## 十、属性变更事件（manual/06-validation-events.md 18）
+
+注册属性变更回调（`propertyChanged` 名称固定不可改）：
+
+```javascript
+this.mon(entity, "propertyChanged", this._onEntityPropertyChanged, this);
+```
+
+- 列表属性变更在命令中注册：添加命令 `onItemCreated`、修改命令 `onEditting`。
+- 表单属性变更在 Behavior 中处理。
+- 仅对新增/修改时的数据变更生效。
+
+## 十一、三种验证规则（manual/06-validation-events.md 15.1）
+
+| 类型 | 实现方式 | 生效 |
+|---|---|---|
+| 标准规则 | `EntityConfig<T>.AddValidations()` 重写 | 代码完成即生效 |
+| 运行时规则 | 实体元数据配置 / 属性特性（`[Required]` 等） | 需元数据初始化 |
+| 预编译规则 | 继承 `EntityRule<T>` / `NotDuplicateRule<T>` / `NoReferencedRule<T>` | 见 `03-entity-data.md` 第五节 |
+
+> 优先用标准规则（实体元数据更新效率低）。

@@ -159,3 +159,88 @@ public class BaseDao<T> : IDao where T : Entity
         => DB.Delete<T>().Where(filter).Execute();
 }
 ```
+
+---
+
+## 七、实体属性 5 种类型与注册（manual/03-entity-modeling.md 6.6）
+
+| 类型 | 注册方法 | 说明 |
+|---|---|---|
+| 普通属性 | `P<T>.Register(e => e.Xxx)` | 直接属性，映射数据库基类字段（见第一节） |
+| 列表属性 | `P<T>.RegisterList(e => e.XxxList)` | 一对多子表；取值用 `GetLazyList` |
+| 引用属性 | `RegisterRefId` + `RegisterRef`（成对） | 一对一；ID 引用映射 DB 字段，实体引用默认懒加载 |
+| 视图属性 | `P<T>.RegisterView(e => e.Xxx, p => p.Ref.Code)` | 显示引用实体字段；JOIN 加载避 N+1；不可编辑；需 `EagerLoadOptions.LoadWithViewProperty()` |
+| 只读属性 | `P<T>.RegisterReadOnly(e => e.Xxx, e => e.Compute(), 依赖属性)` | 内存计算；**禁止访问数据库（会 N+1）** |
+
+## 八、引用属性与主从关系
+
+引用属性 ID 与实体**成对注册**（`ReferenceType.Normal` 普通引用 / `ReferenceType.Parent` 主从的子端）：
+
+```csharp
+public static readonly IRefIdProperty RoleIdProperty = P<User>.RegisterRefId(e => e.RoleId, ReferenceType.Normal);
+public static readonly RefEntityProperty<Role> RoleProperty = P<User>.RegisterRef(e => e.Role, RoleIdProperty);
+public int RoleId { get => (int)GetRefId(RoleIdProperty); set => SetRefId(RoleIdProperty, value); }
+public Role Role { get => GetRefEntity(RoleProperty); set => SetRefEntity(RoleProperty, value); }
+```
+
+主从关系（一对多）：主实体 `RegisterList` + `GetLazyList`，子实体 `RegisterRefId(ReferenceType.Parent)` + `RegisterRef`：
+
+```csharp
+[RootEntity, Serializable]
+public class ItemGroup : Entity<double>
+{
+    public static readonly ListProperty<EntityList<Item>> ItemListProperty = P<ItemGroup>.RegisterList(e => e.ItemList);
+    public EntityList<Item> ItemList => this.GetLazyList(ItemListProperty);
+}
+[ChildEntity, Serializable]
+public class Item : Entity<double>
+{
+    public static readonly IRefIdProperty ItemGroupIdProperty = P<Item>.RegisterRefId(e => e.GroupId, ReferenceType.Parent);
+    public static readonly RefEntityProperty<ItemGroup> ItemGroupProperty = P<Item>.RegisterRef(e => e.Group, ItemGroupIdProperty);
+}
+```
+
+## 九、实体配置 EntityConfig（manual/03-entity-modeling.md 6.8）
+
+重写 `ConfigMeta()` 配置映射/插件，重写 `AddValidations()` 配置验证规则：
+
+```csharp
+protected override void ConfigMeta()
+{
+    Meta.MapTable("RES_EMP_GROUP");                        // 映射表
+    Meta.MapView("V_RES_EMP_GROUP");                       // 映射数据库视图
+    Meta.MapView("(SELECT * FROM RES_EMP_GROUP)");         // 映射 SQL 视图（必须括号；不能出现当前实体，否则死循环）
+    Meta.MapAllProperties();                                // 映射所有字段
+    Meta.Property(Employee.CodeProperty).MapColumn().HasLength(50); // 指定列长度
+    // 实体插件
+    Meta.EnablePhantoms();      // 假删除（IS_PHANTOM）
+    Meta.EnableInvOrg();        // 库存组织（INV_ORG_ID）
+    Meta.EnableDataSync();      // 数据同步（SYNC_ID）
+    Meta.EnableEntityLog();     // 编辑日志
+    Meta.EnableSort(); Meta.EnableTimeStamp(); Meta.EnableVersion();
+}
+```
+
+> **注意**：业务实体通常继承 `DataEntity`（DataEntity 含 IS_PHANTOM/INV_ORG_ID/SYNC_ID 等默认列，见 SKILL.md 第6节）；直接继承 `Entity` 时需在 `ConfigMeta()` 手动 `EnablePhantoms/EnableInvOrg/EnableDataSync` 启用对应插件。**DataEntity 具体默认启用了哪些插件，拿不准时查 manual/03 6.8 或框架源码，勿臆测。**
+
+## 十、实体仓库查找 RF.Find（manual/03-entity-modeling.md 6.4）
+
+```csharp
+var repo  = RF.Find<User>();        // 找实体仓库单例
+var user  = repo.GetById(id, eagerLoad);
+var users = repo.GetAll(pagingInfo, eagerLoad);
+RF.Save(user);
+```
+
+> 仓库定位：同程序集同命名空间下"实体名+Repository"后缀视为其仓库，或 `[RepositoryFor]` / `[EntityMatrix]` 标记；找不到则用默认 `EntityRepository<T>`。**建议用默认仓库，特殊查询逻辑放 Controller。**
+
+## 十一、标签式验证规则与缓存（manual/03-entity-modeling.md 6.7.8）
+
+除第五节的代码式规则，还有**标签式**规则（声明后需实体元数据初始化才生效）：
+
+- `[Required]` 不能为空
+- `[NotDuplicate]` 不能重复
+- `[MaxLength(n)]` / `[MinLength(n)]` 字符串长度
+- `[MaxValue(v)]` / `[MinValue(v)]` 数值范围
+
+> **缓存注意**：验证规则（标签式与代码式）修改后**必须重启服务才生效**——规则缓存在集群服务上，不重启无法保证所有节点刷新。

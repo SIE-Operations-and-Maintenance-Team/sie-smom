@@ -138,3 +138,39 @@ void ConfigWritingReportView()
     View.Property(p => p.No).Readonly();        // 不会显示！
 }
 ```
+
+---
+
+## 五、视图配置方法与规则（manual/04-ui-impl-editors.md 13.2）
+
+| 方法 | 用途 | 关键规则 |
+|---|---|---|
+| `ConfigView()` | 界面入口 | 不在此配置列和命令 |
+| `ConfigListView()` | 列表视图 | |
+| `ConfigDetailsView()` | 表单视图 | **必须先 `View.FormEdit()` 再 `UseDefaultCommands()`，否则异常** |
+| `ConfigQueryView()` | 查询视图 | **不用默认命令集**（会多出 view 权限） |
+| `ConfigSelectionView()` | 下拉视图 | 不配操作命令 |
+| `ConfigImportView()` | 导入视图 | 不配命令 |
+| 自定义 `ConfigXxxView()` | 自定义视图 | `UseDefaultCommands()` 不生效；需 `DeclareExtendViewGroup` + `.Show()`（见第四节） |
+
+## 六、ViewConfig 其他常用方法（manual/04 13.3）
+
+`AssignAuthorize(typeof(实体))` 授权可信实体 / `WithoutPaging()` 不分页 / `RemoveCommands(WebCommandNames.Copy)` 移除命令 / `ReplaceCommands(WebCommandNames.Delete, typeof(XxxCommand).FullName)` 替换命令 / `ClearCommands()` 清除命令 / `UseClientOrder()` 内存排序 / `UseLayoutSize(0.4, 0.6)` 父子比例（默认 1:1）/ `UseChildrenAsHorizontal()` 子列表水平布局 / `DisableEditing()` 禁止编辑 / `DraggableForTree()` 禁止树拖动 / `using (View.DeclareBand("test"))` 表格列分组 / `using (View.DeclareGroup("提示信息"))` 表单分组 / `UseGridSelectionModel()` 行选择模式 / `RequierModels(typeof(A), typeof(B))` 额外引用实体
+
+## 七、属性设置（manual/04 13.4）
+
+- `ShowInList(width: 300)` 列宽 / `HasOrderNo(4)` 列顺序 / `FixColumn()` 冻结列
+- `.Readonly(表达式)` / `.Visibility(表达式)`（表格仅 true/false）；`PersistenceStatus` 状态：`Unchanged / Modified / New / Deleted`
+- `.UseDataSource((source, pagingInfo, keyword) => ...)` 引用属性自定义数据源
+- 查询必填：`.UseTextEditor(p => p.AllowBlank = false)`
+
+## 八、JS 常用 API 速查（manual/04 13.5）
+
+- **消息**：`SIE.Msg.showMessage / showError / showWarning / askQuestion / confirm / wait / hide / close / showToast`
+- **视图方法**：`view.getParent() / getChildren() / getCurrent() / refreshData([id]) / loadChildData([true]) / syncCmdState() / getControl() / getMeta() / getData() / setData() / getToken() / findCmd() / findChild("全命名空间")`
+- **其他**：`entity.markSaved()` / `CRT.Workbench.closeCurrentTab()` / `CRT.Context.GlobalContext.getContext('userInfo')` 登录人 / `CRT.Context.PageContext.getParams()` addPage 参数
+
+## 九、默认值设置（manual/04 13.7）
+
+- 后端：`View.Property(p => p.Name).DefaultValue("Test")`；枚举 `.DefaultValue((int)ItemType.Product)`；日期 `.DefaultValue(DateTime.Today).UseDateEditor()`；引用属性 `.DefaultValue(RT.Service.Resolve<XxxController>().GetXxx())`
+- 前端：`entity.set('属性名', value)`；**引用属性需同时设 id 和 `_Display` 显示名**
