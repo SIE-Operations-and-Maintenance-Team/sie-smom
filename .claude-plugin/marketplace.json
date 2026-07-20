@@ -1,0 +1,18 @@
+{
+  "name": "sie-smom",
+  "description": "SIE SMOM 平台 Claude Code Skill 市场",
+  "owner": {
+    "name": "SIE Operations & Maintenance Team"
+  },
+  "plugins": [
+    {
+      "name": "sie-smom",
+      "description": "SIE SMOM 平台开发专家 - .NET 6.0 MES + SIE 自研框架，防幻写参考底库",
+      "version": "1.0.2",
+      "source": "./",
+      "author": {
+        "name": "SIE Operations & Maintenance Team"
+      }
+    }
+  ]
+}

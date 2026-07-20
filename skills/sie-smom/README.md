@@ -65,8 +65,6 @@ Skill 内置的**防幻写协议**保证 AI 在给出建议前先查阅参考底
 ```
 sie-smom/
 ├── SKILL.md                         # 入口文件：平台本质 + 防幻写协议 + 10 条红线 + 路由表
-├── plugin.json                      # Claude Code 插件元数据
-├── manifest.json                    # Skill 元数据
 ├── references/
 │   ├── 01-architecture.md           # 架构总览（分层/Module/DataProvider/IoC）
 │   ├── 02-wpf.md                    # WPF 组件规范

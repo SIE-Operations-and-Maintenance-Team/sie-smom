@@ -10,21 +10,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 sie-smom/
+├── .claude-plugin/
+│   ├── plugin.json         ← plugin 元数据
+│   └── marketplace.json    ← marketplace 声明（plugins 列表）
 ├── skills/
-│   └── sie-smom/          ← 实际 skill（cc-switch 从这里识别）
-│       ├── SKILL.md        ← Skill 入口（平台本质、防幻写协议、10条红线、路由表）
-│       ├── plugin.json     ← 插件元数据
-│       ├── manifest.json   ← Skill 元数据
-│       ├── references/     ← 参考底库（精炼规则 + 权威手册）
-│       │   ├── 01-architecture.md ～ 11-oracle-table.md  ← 精炼规则
-│       │   └── manual/     ← docx 权威手册（按主题切分11篇）
-│       └── ...
-├── plugins.json            ← Claude Code 插件市场索引
-├── update.ps1              ← 一键更新脚本（Windows）
-├── update.sh               ← 一键更新脚本（Unix）
+│   └── sie-smom/           ← 实际 skill（SKILL.md + references/）
+│       ├── SKILL.md         ← Skill 入口（平台本质、防幻写协议、10条红线、路由表）
+│       └── references/      ← 参考底库（精炼规则 + 权威手册）
+│           ├── 01-architecture.md ～ 11-oracle-table.md  ← 精炼规则
+│           └── manual/      ← docx 权威手册（按主题切分11篇）
 ├── README.md
+├── CLAUDE.md
 ├── LICENSE
-└── .gitignore
+├── update.ps1              ← 一键更新脚本（Windows）
+└── update.sh               ← 一键更新脚本（Unix）
 ```
 
 ## 核心设计
@@ -59,7 +58,7 @@ gh release edit v1.0.0 --notes "更新内容..."
 ### 添加新 Skill
 1. 在 `skills/` 下创建目录，如 `skills/xxx-skill/`
 2. 目录根包含 `SKILL.md` 作为入口
-3. 更新根目录 `plugins.json` 添加插件条目
+3. 在 `.claude-plugin/marketplace.json` 的 `plugins` 数组追加条目
 4. 更新 `README.md` 添加介绍
 5. 提交 PR
 
