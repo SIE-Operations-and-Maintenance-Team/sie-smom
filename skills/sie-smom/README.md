@@ -16,10 +16,10 @@
 
 ```bash
 # 第一步：注册市场（只需一次）
-/plugin marketplace add SIE-Operations-and-Maintenance-Team/smom-skills
+/plugin marketplace add SIE-Operations-and-Maintenance-Team/sie-smom
 
 # 第二步：安装 skill（只需一次，后续版本自动更新）
-/plugin install sie-smom@smom-skills
+/plugin install sie-smom@sie-smom
 ```
 
 ### 方式二：直接克隆
@@ -32,7 +32,7 @@ git clone https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom.git
 ### 方式三：一键更新脚本（传统方式适用）
 
 ```bash
-# 安装 smom-skills 索引仓库后运行
+# 克隆 sie-smom 仓库后运行
 .\update.ps1            # Windows
 ./update.sh             # macOS / Linux
 ```
