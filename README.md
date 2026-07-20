@@ -4,6 +4,16 @@ SIE SMOM 平台（.NET 6.0 MES + SIE 自研框架）的 Claude Code Skill 集合
 
 让 AI 精通 SMOM 平台特性，**防幻写**--编写或审查 SMOM 的 C#/JS/SQL 代码时，AI 先查参考底库再写，不臆造框架 API。
 
+## How it works
+
+SMOM 是赛意自研框架，API 面广且无公开文档，AI 凭记忆写必然臆造（错误的编辑器名、缺失 `IS_PHANTOM`、前端直访 DB、主键用 IDENTITY 等）。本 skill 把平台特性抽成参考底库，强制 AI「先查再写、找不到就明说」：
+
+1. **先查再写**：动手写实体 / Controller / ViewConfig / 命令 / SQL 前，先查 `references/` 找真实 API 签名与示例
+2. **照搬模式**：复用参考库的命名、基类、属性、参数顺序
+3. **找不到就明说**：参考库未覆盖的 API，明确告知「需查证」，不编造
+
+详见 `skills/sie-smom/SKILL.md` 第 2 节（防幻写协议）和第 3 节（10 条红线）。
+
 ## Installation
 
 ### Claude Code 插件市场（推荐）

@@ -1,7 +1,7 @@
 {
   "name": "sie-smom",
   "description": "SIE SMOM 平台开发专家 - .NET 6.0 MES + SIE 自研框架，防幻写参考底库",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": {
     "name": "SIE Operations & Maintenance Team"
   },
