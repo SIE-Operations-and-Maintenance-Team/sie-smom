@@ -56,6 +56,10 @@ git clone https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom.git
 | 高级功能 | 附件、打印、编码规则、调度、预警、API、客制化界面、权限 |
 | 通用 | Algorithm、L10N 国际化、JS 事件 API（mon/fireEvent/mun）、常见坑 |
 
+### smom-quickstart 🚀
+
+**SMOM 平台快速入门** - 从零新建 SMOM 业务功能的端到端步骤清单（建实体 -> EntityConfig -> 建表 -> Controller -> ViewConfig -> 菜单）。
+
 ## 目录结构
 
 ```
@@ -64,9 +68,11 @@ sie-smom/
 │   ├── plugin.json         ← plugin 元数据
 │   └── marketplace.json    ← marketplace 声明（plugins 列表）
 ├── skills/
-│   └── sie-smom/           ← 实际 skill（SKILL.md + references/）
-│       ├── SKILL.md
-│       └── references/
+│   ├── sie-smom/           ← SMOM 平台开发专家（SKILL.md + references/）
+│   │   ├── SKILL.md
+│   │   └── references/
+│   └── smom-quickstart/     ← SMOM 快速入门（SKILL.md）
+│       └── SKILL.md
 ├── README.md
 ├── CLAUDE.md
 ├── LICENSE
