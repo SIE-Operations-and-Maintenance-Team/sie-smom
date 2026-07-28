@@ -16,9 +16,8 @@ sie-smom/
 ├── skills/
 │   └── sie-smom/           ← 实际 skill（SKILL.md + references/）
 │       ├── SKILL.md         ← Skill 入口（平台本质、防幻写协议、10条红线、路由表）
-│       └── references/      ← 参考底库（精炼规则 + 权威手册）
-│           ├── 01-architecture.md ～ 11-oracle-table.md  ← 精炼规则
-│           └── manual/      ← docx 权威手册（按主题切分11篇）
+│       └── references/      ← 参考底库（精炼规则）
+│           ├── 01-architecture.md ～ 12-pda-frontend.md  ← 精炼规则
 ├── README.md
 ├── CLAUDE.md
 ├── LICENSE
@@ -74,6 +73,4 @@ git tag -f v1.0.0 && git push origin v1.0.0 -f
 
 ## 参考底库来源
 
-- **精炼规则**（references/01-11）：个人经验整理的规则，含【禁止项/错误示例/正确示例】
-- **权威手册**（references/manual/）：SMOM v8.0+ BS 学习手册（docx 全文切分）
-- 与 manual 重合处，以精炼规则为准（更尖锐、更可执行）
+- **精炼规则**（references/01-12）：个人经验整理的规则，含【禁止项/错误示例/正确示例】

@@ -56,13 +56,13 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 1. **禁止前端直访数据库**：ViewConfig / Command / Behavior / DataQueryer / 前端 JS 中禁止 `DB.Query<T>` / `RF.Save` / `RF.GetById` / `Query<T>` 等；必须 `RT.Service.Resolve<XxxController>().方法()`。
 2. **禁止无条件全表查询**：`Query<T>().ToList()` 必须至少带一个 `Where`；无条件的 `GetAll` 要抛 `ValidationException("请至少输入一个查询条件".L10N())`。
 3. **大集合 IN 查询必须分批**：`List.Contains` 用 `SplitContains` 或 `SplitDataExecute`；元素 >1000 时强制使用，避免超长 SQL IN。
-4. **每个查询必须带 `IS_PHANTOM = 0`**（除非明确查逻辑删除数据）；分页必须带 `ORDER BY`。
-5. **JS 文件必须设为嵌入资源**（`<EmbeddedResource Include="..."/>` + `<None Remove="..."/>`），否则运行时报 `No such Entity / No such class`。
+4. **每个查询必须带 `IS_PHANTOM = 0`**（除非明确查逻辑删除数据）；分页必须带 `ORDER BY`。**枚举类型属性必须用对应枚举类而非 `int`**：`Property<AccountState>` 而非 `Property<int>`。
+5. **新增文件必须同步更新 `.csproj`**：所有新增文件（`.cs`、`.js`、`.aspx` 等）必须同步更新对应项目的 `.csproj`。JS 文件需同时配置 `<EmbeddedResource Include="..."/>` + `<None Remove="..."/>`，否则运行时报 `No such Entity / No such class`。
 6. **实体属性用 `Property<T>` 注册**，`#region` 包裹并加 `[Label("中文名")]`；枚举每个值加 `[Label]`。
 7. **国际化**：C# 用 `.L10N()` / `.L10nFormat(args)`，JS 用 `.t()`；不裸写中文业务串到无翻译路径。
 8. **新建实体须同步产出建表脚本**（MSSQL 和 Oracle 各一套）：含 8 个 `DataEntity` 默认列、2 个序列（`SEQ_<表>_ID` 从 100000 起、`SEQ_<表>_SYNC_ID` 从 1 起）、主键约束 `PK_<表>`、索引 `IX_<表>_<字段>`、表/列注释、枚举字段 `CHECK` 约束。
-9. **Controller 继承 `DomainController`**；跨模块通用查询用 `CommonController`；控制器间互调用用 `RT.Service.Resolve<T>()`。
-10. **自定义非重写视图方法**（如 `ConfigXxxView()`）中，属性必须显式 `.Readonly().Show(ShowInWhere.All)` 才会显示（框架只自动处理 `ConfigListView` / `ConfigDetailsView`）。
+9. **Controller 继承 `DomainController`**；跨模块通用查询用 `CommonController`；控制器间互调用用 `RT.Service.Resolve<T>()`。**强关联子表用 `View.ChildrenProperty()`，弱关联/附加子表用 `View.AttachChildrenProperty()`**，禁止强关联子表使用 `AttachChildrenProperty`。
+10. **自定义非重写视图方法**（如 `ConfigXxxView()`）中，属性必须显式 `.Readonly().Show(ShowInWhere.All)` 才会显示（框架只自动处理 `ConfigListView` / `ConfigDetailsView`）。**`View.FormEdit()` 用于弹窗编辑，`View.InlineEdit()` 用于行内编辑**，根据交互需求选择，禁止无脑全用 `View.FormEdit()`。
 
 > 详见各 curated 文件中的【禁止 / 错误示例 / 正确示例】小节。
 
@@ -74,30 +74,30 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 
 ## 4. 主题路由表（按任务查参考文件）
 
-> `curated/`（references 根目录 01-11）= 精炼规则，优先读；`manual/` = docx 权威手册，查细节/查 curated 未覆盖项时读。
+> `references/` 目录下 01-12 为精炼规则，始终优先读；未覆盖项需告知用户查证。
 
-| 任务 | 先读（curated） | 再查（manual） |
-|---|---|---|
-| 架构 / 分层 / Module 注册 / DataProvider / IoC / 类命名规范 / 属性命名陷阱 | `01-architecture.md` | `01-dev-standards.md`、`02-snest-platform.md` |
-| 实体建模 / 属性 / 标签 / 配置 / UML-ModelFirst | `03-entity-data.md` | `03-entity-modeling.md` |
-| 实体验证规则 / DAO | `03-entity-data.md` | `06-validation-events.md` |
-| 后端 Controller / 查询规范 | `05-controller.md` | `05-commands.md` |
-| 命令（增删改查·保存·选择·启停·复制新增·导入导出·合并拆分·上传） | `05-controller.md` | `05-commands.md` |
-| Web ViewConfig / 视图方法 / AttachChildrenProperty | `04-web-viewconfig.md` | `04-ui-impl-editors.md` |
-| 编辑器 `UseXxxEditor()`（布尔/文本/数值/日期/枚举/图片/快码/分页查找/弹框/联动/树形/文本按钮） | — | `04-ui-impl-editors.md` |
-| Web 前端（DataQueryer / ExtJS Layout·Controller / 通用工具 / Web Behavior） | `06-web-frontend.md` | `09-api-js-events.md` |
-| Behavior 行为 / 属性变更事件 / 附加子视图 / 提交事件 | — | `06-validation-events.md` |
-| 通用附件 / 编码生成规则 / 配置项 / 标签单据打印 / 实体扩展属性 | — | `07-attachments-printing.md` |
-| 三种查询实现 / 调度 / 预警 | — | `08-queries-scheduling-alerts.md` |
-| Api 接口 / JS 事件(mon·fireEvent·mun) / 关闭前事件 / GridPanel 动态列 | — | `09-api-js-events.md` |
-| 半客制 / 全客制界面 / BS 排序 / 界面权限排查 / JS 按需加载 | — | `10-custom-ui-permissions.md` |
-| Ajax(SIE.Ajax) / SMOM8.2 部署 / 框架内数据库操作(DB·原生SQL·存储过程·事务·Exists) | — | `11-ajax-deploy-db.md` |
-| WPF（ViewConfig / Behavior / Command / Editor / Layout） | `02-wpf.md` | — |
-| 通用（Algorithm / L10N / XML 注释 / 框架 API 速查） | `07-general.md` | — |
-| MSSQL 建表 | `09-mssql-table.md` | — |
-| MSSQL 查询（C#→SQL 类型映射 / JOIN / 枚举 / 分页 / 避坑 / MSSQL↔Oracle 差异） | `08-mssql-query.md` | — |
-| Oracle 建表 | `11-oracle-table.md` | — |
-| Oracle 查询 | `10-oracle-query.md` | — |
+| 任务 | 参考文件 |
+|---|---|
+| 架构 / 分层 / Module 注册 / DataProvider / IoC / 类命名规范 / 属性命名陷阱 | `01-architecture.md` |
+| 实体建模 / 属性 / 标签 / 配置 / UML-ModelFirst | `03-entity-data.md` |
+| 实体验证规则 / DAO | `03-entity-data.md` |
+| 后端 Controller / 查询规范 | `05-controller.md` |
+| 命令（增删改查·保存·选择·启停·复制新增·导入导出·合并拆分·上传） | `05-controller.md` |
+| Web ViewConfig / 视图方法 / AttachChildrenProperty | `04-web-viewconfig.md` |
+| 编辑器 `UseXxxEditor()`（布尔/文本/数值/日期/枚举/图片/快码/分页查找/弹框/联动/树形/文本按钮） | `04-web-viewconfig.md` |
+| Web 前端（DataQueryer / ExtJS Layout·Controller / 通用工具 / Web Behavior） | `06-web-frontend.md` |
+| Behavior 行为 / 属性变更事件 / 附加子视图 / 提交事件 | — |
+| 通用附件 / 编码生成规则 / 配置项 / 标签单据打印 / 实体扩展属性 | — |
+| 三种查询实现 / 调度 / 预警 | — |
+| Api 接口 / JS 事件(mon·fireEvent·mun) / 关闭前事件 / GridPanel 动态列 | — |
+| 半客制 / 全客制界面 / BS 排序 / 界面权限排查 / JS 按需加载 | — |
+| Ajax(SIE.Ajax) / SMOM8.2 部署 / 框架内数据库操作(DB·原生SQL·存储过程·事务·Exists) | — |
+| WPF（ViewConfig / Behavior / Command / Editor / Layout） | `02-wpf.md` |
+| 通用（Algorithm / L10N / XML 注释 / 框架 API 速查） | `07-general.md` |
+| MSSQL 建表 | `09-mssql-table.md` |
+| MSSQL 查询（C#→SQL 类型映射 / JOIN / 枚举 / 分页 / 避坑 / MSSQL↔Oracle 差异） | `08-mssql-query.md` |
+| Oracle 建表 | `11-oracle-table.md` |
+| Oracle 查询 | `10-oracle-query.md` |
 
 ---
 
@@ -110,7 +110,7 @@ RT.Service.Resolve<T>()              // IoC 解析服务/控制器
 RT.Service.Register(iface, impl, ServiceLifeStyle.Singleton)  // 注册（在 Module.Initialize）
 RT.IdentityId / RT.InvOrg / RT.Config.Get<T>(key)
 RF.Save(entity) / RF.GetById<T>(id) / RF.GetAll<T>() / RF.BatchInsert(list) / RF.Find<T>()  // Find<T>() 返回实体仓库单例（见 references/03-entity-data.md）
-DB.Query<T>() / DB.Update<T>() / DB.Delete<T>() / DB.TransactionScope(connStr) / DB.AutonomousTransactionScope(connStr)  // 自治事务，不受嵌套影响（见 manual/11-ajax-deploy-db.md 41.4）
+DB.Query<T>() / DB.Update<T>() / DB.Delete<T>() / DB.TransactionScope(connStr) / DB.AutonomousTransactionScope(connStr)  // 自治事务，不受嵌套影响
 Query<T>()                            // DomainController 内构建 LINQ 查询
 SplitContains(fn) / SplitDataExecute(list, batch=>fn)  // 大集合分批 IN
 .L10N() / .L10nFormat(args)           // C# 国际化
@@ -120,10 +120,10 @@ SIE.invokeDataQuery({type,method,params,token,success})  // 前端调后端 Data
 SIE.Ajax({...})                       // 前端 ajax 请求后台方法
 ```
 
-**编辑器（节选，完整见 `manual/04-ui-impl-editors.md`）**：
+**编辑器（节选）**：
 `UseCheckEditor` / `UseTextEditor` / `UseTextRangeEditor` / `UseMemoEditor` / `UseSpinEditor` / `UseSpinRangeEditor` / `UseDateEditor` / `UseDateRangeEditor` / `UseDateTimeEditor` / `UseEnumEditor` / `UseImageComponentEditor` / `UseCatalogEditor` / `UsePagingLookUpEditor` / `UsePagingLookUpPopupEditor` / `UseTextButtonFieldEditor`。
 
-**命令基类（节选，完整见 `manual/05-commands.md`）**：
+**命令基类（节选）**：
 `ListViewCommand` / `FormSaveCommand` / 以及框架的 添加/修改/删除/查询/保存/选择/复制新增/导入/导出/合并行/拆分行/上传 命令基类——具体可重写方法(canExecute/onItemCreated/getEditEntity 等)查手册，勿臆造。
 
 ---
@@ -143,7 +143,7 @@ SIE.Ajax({...})                       // 前端 ajax 请求后台方法
 | INV_ORG_ID | int? | INT NULL | NUMBER(10,0) | 所属机构 |
 | IS_PHANTOM | bool | BIT NOT NULL DEFAULT 0 | NUMBER(1,0) DEFAULT 0 NOT NULL | 逻辑删除标记 |
 
-> IS_PHANTOM / INV_ORG_ID / SYNC_ID 等列通过实体插件启用（`Meta.EnablePhantoms / EnableInvOrg / EnableDataSync`，在 `EntityConfig.ConfigMeta()` 中），详见 `references/03-entity-data.md` 第九节。业务实体继承 `DataEntity` 时部分插件可能已默认启用，拿不准时查 manual/03-entity-modeling.md 6.8 或框架源码，勿臆测。
+> IS_PHANTOM / INV_ORG_ID / SYNC_ID 等列通过实体插件启用（`Meta.EnablePhantoms / EnableInvOrg / EnableDataSync`，在 `EntityConfig.ConfigMeta()` 中），详见 `references/03-entity-data.md` 第九节。业务实体继承 `DataEntity` 时部分插件可能已默认启用，拿不准时查框架源码，勿臆测。
 
 **类型映射（C# → DB）**：
 
@@ -178,18 +178,92 @@ references/
 ├── 09-mssql-table.md          # MSSQL 建表规范
 ├── 10-oracle-query.md         # Oracle 查询规范
 ├── 11-oracle-table.md         # Oracle 建表规范
-└── manual/                    # SMOM v8.0+ BS 学习手册（docx 权威全文，按主题切分）
-    ├── 01-dev-standards.md            # 开发工具/C#语法/环境/代码片段/8.2注意
-    ├── 02-snest-platform.md           # SNest 技术平台/架构/部署
-    ├── 03-entity-modeling.md          # 实体建模/属性/标签/配置/UML-ModelFirst
-    ├── 04-ui-impl-editors.md          # 菜单/DB连接/单表主从表/编辑器/常用API
-    ├── 05-commands.md                 # 命令全集（最大）
-    ├── 06-validation-events.md        # 验证/提交事件/前后端请求/Behavior/属性变更/附加子视图
-    ├── 07-attachments-printing.md     # 附件/编码规则/配置项/打印/实体扩展
-    ├── 08-queries-scheduling-alerts.md # 三种查询/调度/预警
-    ├── 09-api-js-events.md            # Api/JS事件/关闭前/GridPanel动态列
-    ├── 10-custom-ui-permissions.md    # 半全客制界面/排序/权限/JS按需加载
-    └── 11-ajax-deploy-db.md           # Ajax/部署/数据库操作/示例/经验总结
+└── 12-pda-frontend.md         # PDA 前端（Vue2）编码规范
 ```
 
-> 11 篇 curated 为精炼规则（含禁止/错误/正确示例），与 manual 重合处以 curated 为准；manual 提供 curated 未覆盖的广度细节。
+---
+
+## 8. PDA 前端（Vue2）编码规范
+
+> 适用项目：Vue 2.5.x + Vux + axios 的 PDA 项目。所有代码必须遵循 Prettier 默认风格。
+
+### 8.1 禁止使用可选链 `?.`
+
+Vue 2 项目默认 Babel 配置不支持 `?.` 可选链操作符，必须使用 `&&` 短路判断：
+
+```javascript
+// 错误（Vue2 编译失败）
+const name = data?.Result?.Name;
+
+// 正确
+const name = data && data.Result && data.Result.Name;
+```
+
+### 8.2 API 接口实现模板
+
+所有 API 接口文件放在 `src/assets/plugins/axios-api/api/<ControllerName>/` 目录下，严格按以下模板：
+
+```javascript
+import Vue from 'vue';
+import Storage from '@/assets/js/storage.js'
+export default function (code) {
+    return Vue.axios.post(Storage.url(), {
+        "ApiType": "TaskManagerPDAController",
+        "Parameters": [
+            {
+                "Value": code
+            }
+        ],
+        "Method": "GetRecommendLocation",
+        "Context": {
+            "Ticket": Storage.ticket(),
+            "InvOrgId": Storage.orgid()
+        }
+    }).then(res => {
+        const data = res.data;
+        if (data.Success) {
+            if (data.Context.Ticket) {
+                Storage.refreshTicket(data.Context.Ticket);
+            }
+            return data.Result;
+        } else {
+            // 抛出一个特殊的错误对象，用于区分业务错误和网络错误
+            const businessError = new Error(data.Message);
+            businessError.isBusinessError = true;
+            throw businessError;
+        }
+    }).catch(err => {
+        // 区分业务逻辑错误和网络连接错误
+        if (err.isBusinessError) {
+            // 业务逻辑错误已经在上面处理过了，这里只需要重新抛出
+            return Promise.reject(err);
+        } else {
+            // 真正的网络错误或HTTP状态码错误
+            return Promise.reject(new Error("连接服务器失败"));
+        }
+    });
+}
+```
+
+> **参数说明**：单参数时 `export default function (param)` 直接传值；多参数时使用对象 `export default function (data)` 传 `{ key1: val1, key2: val2 }`，`Parameters: [{ Value: data }]` 统一传整个对象。
+
+### 8.3 调用处模板
+
+```javascript
+this.$vux.loading.show({ text: 'Loading' });
+try {
+    const res = await this.$axiosApi.scanStation(this.inputStationCode);
+    this.$vux.loading.hide();
+    if (res) {
+        // 处理成功结果
+    } else {
+        // 处理空结果
+    }
+} catch (err) {
+    this.$vux.loading.hide();
+    this.$MConfirm.Alert(err.message, function () {
+    })
+}
+```
+
+> **注意**：`this.$axiosApi.<方法名>` 由框架自动注册，方法名取自 API 文件名的驼峰转换（如 `scan-station.js` → `this.$axiosApi.scanStation`）。
