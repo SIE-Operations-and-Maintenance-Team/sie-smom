@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+env:
+  PLUGIN_JSON: .claude-plugin/plugin.json
+  MARKETPLACE_JSON: .claude-plugin/marketplace.json
+
+jobs:
+  release:
+    # 防止版本更新提交再次触发
+    if: "!contains(github.event.head_commit.message, '[skip release]')"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 需要完整历史用于版本计算
+          fetch-depth: 0
+
+      - name: 计算新版本号
+        id: version
+        run: |
+          current=$(jq -r '.version' "$PLUGIN_JSON")
+          major=$(echo "$current" | cut -d. -f1)
+          minor=$(echo "$current" | cut -d. -f2)
+          patch=$(echo "$current" | cut -d. -f3)
+          new_patch=$((patch + 1))
+          new_version="$major.$minor.$new_patch"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "new=$new_version" >> "$GITHUB_OUTPUT"
+
+      - name: 更新 plugin.json 版本号
+        run: |
+          tmp=$(mktemp)
+          jq --arg v "${{ steps.version.outputs.new }}" '.version = $v' "$PLUGIN_JSON" > "$tmp"
+          mv "$tmp" "$PLUGIN_JSON"
+
+      - name: 更新 marketplace.json 版本号
+        run: |
+          tmp=$(mktemp)
+          jq --arg v "${{ steps.version.outputs.new }}" '.plugins[0].version = $v' "$MARKETPLACE_JSON" > "$tmp"
+          mv "$tmp" "$MARKETPLACE_JSON"
+
+      - name: 提交版本更新并打标签
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$PLUGIN_JSON" "$MARKETPLACE_JSON"
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new }} [skip release]"
+          git tag "v${{ steps.version.outputs.new }}"
+          git push origin "v${{ steps.version.outputs.new }}"
+
+      - name: 生成 Release Notes
+        id: notes
+        run: |
+          current="${{ steps.version.outputs.current }}"
+          # 获取从上个版本标签到现在的提交日志
+          # 如果没有 v${current} 标签则从仓库起点开始
+          if git rev-parse "v${current}" >/dev/null 2>&1; then
+            range="v${current}..HEAD"
+          else
+            range="HEAD"
+          fi
+          {
+            echo "notes<<EOF"
+            echo "## 变更内容"
+            echo ""
+            git log --oneline --no-decorate $range -- ':(exclude).github/' | \
+              sed 's/^\([a-f0-9]\{7\}\) /* \1 /' | \
+              grep -v '\[skip release\]' || echo "（无显著变更）"
+            echo ""
+            echo "---"
+            echo "> 自动发布 | 提交: ${{ github.sha }}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.version.outputs.new }}"
+          name: "v${{ steps.version.outputs.new }}"
+          body: ${{ steps.notes.outputs.notes }}
+          make_latest: true

@@ -45,14 +45,16 @@ sie-smom/
 ## 常用命令
 
 ### 发布新版本
-```bash
-# 更新 tag 触发 Release
-git tag -f v1.0.0
-git push origin v1.0.0 -f
 
-# 如果 Release notes 需更新
-gh release edit v1.0.0 --notes "更新内容..."
-```
+推送 `main` 分支时，GitHub Actions 自动完成：
+
+1. 读取 `plugin.json` 当前版本号，自动递增 patch（如 `1.0.6` → `1.0.7`）
+2. 更新 `plugin.json` 和 `marketplace.json` 中的版本号
+3. 创建 `v1.0.7` 标签
+4. 生成 Release Notes（基于提交日志）
+5. 创建 GitHub Release
+
+> 提交信息包含 `[skip release]` 可跳过自动发布。
 
 ### 添加新 Skill
 1. 在 `skills/` 下创建目录，如 `skills/xxx-skill/`
@@ -67,8 +69,7 @@ gh release edit v1.0.0 --notes "更新内容..."
 git add -A
 git commit -m "描述修改内容"
 git push origin main
-# 可选：更新 Release tag
-git tag -f v1.0.0 && git push origin v1.0.0 -f
+# GitHub Actions 会自动发布新版本 Release
 ```
 
 ## 参考底库来源
