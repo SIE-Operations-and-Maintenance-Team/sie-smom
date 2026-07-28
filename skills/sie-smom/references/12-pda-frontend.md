@@ -189,7 +189,7 @@ import Storage from '@/assets/js/storage.js'
 
 Storage.url()           // 获取 API 请求地址
 Storage.ticket()        // 获取登录票据
-Storage.refreshTicket() // 刷新票据
+Storage.refreshTicket(newticket) // 刷新票据
 Storage.orgid()         // 获取库存组织 ID
 Storage.userid()        // 获取用户 ID
 Storage.warehouseid()   // 获取仓库 ID
