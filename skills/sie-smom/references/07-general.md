@@ -98,6 +98,7 @@ public class ItemController : DomainController
 
 ## 五、常见坑
 
+- **C# 代码不是 Allman 风格**：大括号必须独占一行（Allman 风格），禁止 Java/C 风格（大括号跟在行尾）。禁止无意义换行，同一逻辑行放在同一行。
 - **ViewModel 分页失效**：界面查询方法自己做数据转换时，返回对象需 `SetTotalCount` 设置总数，否则分页失效。
 - **报表 / Echart 返回类型**：返回数据用 `List`，**不要返回 `EntityList`**（框架对 `EntityList` 返回做了特殊处理）。
 - **新增文件未更新 .csproj**：所有新增文件（`.cs`、`.js`、`.aspx` 等）必须同步更新对应项目的 `.csproj` 文件。JS 文件需同时配置 `<None Remove>` 和 `<EmbeddedResource Include>`，否则运行时报 `No such Entity / No such class`。这是最常见的遗漏问题，代码生成后必须确认 VS 能索引到新增文件。
