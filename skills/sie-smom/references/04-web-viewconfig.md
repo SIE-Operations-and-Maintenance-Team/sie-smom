@@ -57,8 +57,8 @@ public class AbnormalInforViewConfig : WebViewConfig<AbnormalInfor>
 
 | 方法 | 用途 |
 |------|------|
-| View.FormEdit() | 表单编辑模式 |
-| View.InlineEdit() | 行内编辑模式 |
+| View.FormEdit() | 弹窗表单编辑模式，用于需要点击编辑按钮打开弹窗的场景 |
+| View.InlineEdit() | 行内编辑模式，用于表格内直接编辑的场景 |
 | View.UseDefaultCommands() | 使用默认命令 |
 | View.UseCommands(...) | 指定命令 |
 | View.UseDetail() | 使用详情弹窗 |
@@ -153,24 +153,75 @@ void ConfigWritingReportView()
 | `ConfigImportView()` | 导入视图 | 不配命令 |
 | 自定义 `ConfigXxxView()` | 自定义视图 | `UseDefaultCommands()` 不生效；需 `DeclareExtendViewGroup` + `.Show()`（见第四节） |
 
-## 六、ViewConfig 其他常用方法（manual/04 13.3）
+## 六、ChildrenProperty 强关联子表规范
+
+### 6.1 ChildrenProperty 与 AttachChildrenProperty 的选择依据
+
+| 方法 | 适用场景 | 说明 |
+|------|---------|------|
+| `View.ChildrenProperty(p => p.ChildList)` | 强关联子表 | 子表是当前实体的直接子实体，通过 `RegisterList` + `GetLazyList` 定义 |
+| `View.AttachChildrenProperty(typeof(OtherEntity), ...)` | 弱关联/附加子表 | 关联外部实体，非直接子实体，适合松耦合的附加信息展示 |
+
+**禁止强关联子表使用 `AttachChildrenProperty`。**
+
+### 6.2 强关联子表完整示例
+
+**实体定义**（主实体中）：
+
+```csharp
+#region 可停泊站点 FloorAgvStationDetailList
+/// <summary>
+/// 可停泊站点
+/// </summary>
+[Label("可停泊站点")]
+public static readonly ListProperty<EntityList<FloorAgvStationDetail>> FloorAgvStationDetailListProperty = P<FloorAgvStationRelation>.RegisterList(e => e.FloorAgvStationDetailList);
+
+/// <summary>
+/// 可停泊站点
+/// </summary>
+public EntityList<FloorAgvStationDetail> FloorAgvStationDetailList
+{
+    get { return this.GetLazyList(FloorAgvStationDetailListProperty); }
+}
+#endregion
+```
+
+**视图配置**：
+
+```csharp
+// 强关联子表：直接使用 ChildrenProperty
+View.ChildrenProperty(p => p.FloorAgvStationDetailList);
+
+// 弱关联/附加子表：使用 AttachChildrenProperty
+View.AttachChildrenProperty(typeof(AgvMaintenanceAbnormal), o =>
+{
+    var args = o as ChildPagingDataArgs;
+    return null;
+}).HasLabel("AGV异常情况");
+```
+
+> **注意**：`ChildrenProperty` 不需要 lambda 参数，直接传入实体属性表达式即可；`AttachChildrenProperty` 需要 lambda 接收 `ChildPagingDataArgs` 并返回数据源。
+
+---
+
+## 七、ViewConfig 其他常用方法（manual/04 13.3）
 
 `AssignAuthorize(typeof(实体))` 授权可信实体 / `WithoutPaging()` 不分页 / `RemoveCommands(WebCommandNames.Copy)` 移除命令 / `ReplaceCommands(WebCommandNames.Delete, typeof(XxxCommand).FullName)` 替换命令 / `ClearCommands()` 清除命令 / `UseClientOrder()` 内存排序 / `UseLayoutSize(0.4, 0.6)` 父子比例（默认 1:1）/ `UseChildrenAsHorizontal()` 子列表水平布局 / `DisableEditing()` 禁止编辑 / `DraggableForTree()` 禁止树拖动 / `using (View.DeclareBand("test"))` 表格列分组 / `using (View.DeclareGroup("提示信息"))` 表单分组 / `UseGridSelectionModel()` 行选择模式 / `RequierModels(typeof(A), typeof(B))` 额外引用实体
 
-## 七、属性设置（manual/04 13.4）
+## 八、属性设置（manual/04 13.4）
 
 - `ShowInList(width: 300)` 列宽 / `HasOrderNo(4)` 列顺序 / `FixColumn()` 冻结列
 - `.Readonly(表达式)` / `.Visibility(表达式)`（表格仅 true/false）；`PersistenceStatus` 状态：`Unchanged / Modified / New / Deleted`
 - `.UseDataSource((source, pagingInfo, keyword) => ...)` 引用属性自定义数据源
 - 查询必填：`.UseTextEditor(p => p.AllowBlank = false)`
 
-## 八、JS 常用 API 速查（manual/04 13.5）
+## 九、JS 常用 API 速查（manual/04 13.5）
 
 - **消息**：`SIE.Msg.showMessage / showError / showWarning / askQuestion / confirm / wait / hide / close / showToast`
 - **视图方法**：`view.getParent() / getChildren() / getCurrent() / refreshData([id]) / loadChildData([true]) / syncCmdState() / getControl() / getMeta() / getData() / setData() / getToken() / findCmd() / findChild("全命名空间")`
 - **其他**：`entity.markSaved()` / `CRT.Workbench.closeCurrentTab()` / `CRT.Context.GlobalContext.getContext('userInfo')` 登录人 / `CRT.Context.PageContext.getParams()` addPage 参数
 
-## 九、默认值设置（manual/04 13.7）
+## 十、默认值设置（manual/04 13.7）
 
 - 后端：`View.Property(p => p.Name).DefaultValue("Test")`；枚举 `.DefaultValue((int)ItemType.Product)`；日期 `.DefaultValue(DateTime.Today).UseDateEditor()`；引用属性 `.DefaultValue(RT.Service.Resolve<XxxController>().GetXxx())`
 - 前端：`entity.set('属性名', value)`；**引用属性需同时设 id 和 `_Display` 显示名**
