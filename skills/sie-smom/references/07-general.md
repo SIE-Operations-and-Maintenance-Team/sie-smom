@@ -45,8 +45,9 @@ e.BrokenDescription = "包装[{0}]主单位必须是第一个".L10nFormat(d.Code
 title: '异常信息报表'.t()
 ```
 
-## 三、XML 文档注释规范
-所有公开的类、方法、属性必须使用 XML 文档注释:
+## 三、XML 文档注释规范（强制）
+
+**所有公开的类、方法、属性、字段必须使用 XML 文档注释，禁止遗漏。** 行内重要逻辑也必须添加注释说明意图。
 
 ```csharp
 /// <summary>
@@ -58,10 +59,18 @@ public class ItemController : DomainController
     /// 查询物料
     /// </summary>
     /// <param name="criteria">物料查询实体</param>
-    /// <returns>物料类别</returns>
-    public virtual EntityList<Item> GetItems(ItemCriteria criteria) { }
+    /// <returns>物料列表</returns>
+    public virtual EntityList<Item> GetItems(ItemCriteria criteria)
+    {
+        // 校验查询条件
+        if (criteria == null)
+            throw new ArgumentNullException(nameof(criteria));
+        // ...业务逻辑
+    }
 }
 ```
+
+> **注意**：缺少 XML 注释的代码将被视为不合格。行内注释帮助接手者快速理解代码意图，但不应注释显而易见的内容（如 `i++` // 加一）。
 
 ## 四、关键框架约定速查
 
@@ -80,7 +89,10 @@ public class ItemController : DomainController
 | .L10nFormat(args...) | 格式化国际化 |
 | .IsNotEmpty() | 字符串非空判断 |
 | .IsNullOrEmpty() | 字符串为空判断 |
+| `FirstOrDefault(new EagerLoadOptions().LoadWithViewProperty())` | 查询单条并加载视图属性（仅1参数重载） |
 | .t() | JS前端翻译 |
+
+> **FirstOrDefault 注意**：框架的 `FirstOrDefault` 只有 **1 个参数重载**，传入 `EagerLoadOptions` 即可。禁止使用 `FirstOrDefault(null, options)` 双参数形式。
 
 ---
 
@@ -88,6 +100,7 @@ public class ItemController : DomainController
 
 - **ViewModel 分页失效**：界面查询方法自己做数据转换时，返回对象需 `SetTotalCount` 设置总数，否则分页失效（manual/11-ajax-deploy-db.md 41.6）。
 - **报表 / Echart 返回类型**：返回数据用 `List`，**不要返回 `EntityList`**（框架对 `EntityList` 返回做了特殊处理）（manual/11-ajax-deploy-db.md 42.2）。
+- **新增文件未更新 .csproj**：所有新增文件（`.cs`、`.js`、`.aspx` 等）必须同步更新对应项目的 `.csproj` 文件。JS 文件需同时配置 `<None Remove>` 和 `<EmbeddedResource Include>`，否则运行时报 `No such Entity / No such class`。这是最常见的遗漏问题，代码生成后必须确认 VS 能索引到新增文件。
 
 ---
 
