@@ -1,6 +1,6 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
 > **原文文件**：03-____.md
-> **优先级**：高。与 manual/ 权威手册重合之处，以本文件规则为准（更尖锐、更可执行）。
+> **优先级**：高。
 > **覆盖范围**：DataQueryer分层·ExtJS Layout·Controller·通用工具·JS嵌入资源·禁止前端直访DB
 
 ---
@@ -203,7 +203,7 @@ public class XxxViewConfig : WebViewConfig<XxxEntity>
 
 ---
 
-## 九、提交事件（manual/06-validation-events.md 15.3）
+## 九、提交事件
 
 保存实体前/后触发，**需实体元数据更新才生效**：
 
@@ -216,7 +216,7 @@ public class XxxViewConfig : WebViewConfig<XxxEntity>
 - 表 `MDA_ENTITY_SUBMIT_EVENT`，`DISCRIMINATOR='A'` 提交前、`'B'` 提交后。
 - 每次修改提交事件必须重新更新实体元数据。
 
-## 十、属性变更事件（manual/06-validation-events.md 18）
+## 十、属性变更事件
 
 注册属性变更回调（`propertyChanged` 名称固定不可改）：
 
@@ -228,7 +228,7 @@ this.mon(entity, "propertyChanged", this._onEntityPropertyChanged, this);
 - 表单属性变更在 Behavior 中处理。
 - 仅对新增/修改时的数据变更生效。
 
-## 十一、三种验证规则（manual/06-validation-events.md 15.1）
+## 十一、三种验证规则
 
 | 类型 | 实现方式 | 生效 |
 |---|---|---|

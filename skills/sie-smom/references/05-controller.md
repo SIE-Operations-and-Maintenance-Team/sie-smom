@@ -1,6 +1,6 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
 > **原文文件**：07-_____.md
-> **优先级**：高。与 manual/ 权威手册重合之处，以本文件规则为准（更尖锐、更可执行）。
+> **优先级**：高。
 > **覆盖范围**：DomainController·Query<T>规范·禁止全表查询·SplitContains·SplitDataExecute·CommonController
 
 ---
@@ -139,7 +139,7 @@ var items = RT.Service.Resolve<CommonController>().GetDatas<Item>(p => p.State =
 
 ---
 
-## 6. 命令基类与可重写方法（manual/05-commands.md）
+## 6. 命令基类与可重写方法
 
 命令跨前后端：JS 端控制交互/创建实体，CS 端执行业务。
 
@@ -151,7 +151,7 @@ var items = RT.Service.Resolve<CommonController>().GetDatas<Item>(p => p.State =
 | `FormSaveCommand`（表单保存） | CS | `Excute` / `DoSave(Entity)` / `OnSaving` / `OnSaved` / `OnValidation` |
 | `ImportCommandBase`（导入） | CS | `GetImportCompleted()` / `GetImportHandleType()` |
 
-> 方法名 `Excute` 为 manual 原文（框架实际拼写，非 `Execute`），重写时需一致。命令重写**必须加 meta 且不能换行**；前后端有交互时 JS/CS 全命名空间完全一致（见 `01-architecture.md` 命令类规范）。
+> 方法名 `Excute` 为框架实际拼写（非 `Execute`），重写时需一致。命令重写**必须加 meta 且不能换行**；前后端有交互时 JS/CS 全命名空间完全一致（见 `01-architecture.md` 命令类规范）。
 
 ## 7. Criteria 类必须定义在独立文件中
 

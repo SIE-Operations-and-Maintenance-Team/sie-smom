@@ -1,6 +1,6 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
 > **原文文件**：01-____.md
-> **优先级**：高。与 manual/ 权威手册重合之处，以本文件规则为准（更尖锐、更可执行）。
+> **优先级**：高。
 > **覆盖范围**：项目分层(Module/Web/Wpf/xUnit/Job/Statistics)·Module注册·DataProvider·IoC(RT.Service·RF·DB)
 
 ---
@@ -132,7 +132,7 @@ DB.Delete<T>();                       // 删除
 DB.TransactionScope(connectionString) // 事务
 ```
 
-**事务使用规则**（manual/11-ajax-deploy-db.md 41.4）：
+**事务使用规则**：
 
 - `CommonEntityDataProvider.ConnectionStringName` 为对应工程的数据库提供者。
 - `tran.Complete()` 是事务完成标记。
@@ -144,7 +144,7 @@ DB.TransactionScope(connectionString) // 事务
 
 ## 四、SMOM 类命名规范速查
 
-> 见 manual/01-dev-standards.md 1.2.5。命名空间统一为"对应工程名.文件夹名"；所有名称用英文不用拼音；Pascal 命名。
+> 命名空间规则：命名空间统一为"对应工程名.文件夹名"；所有名称用英文不用拼音；Pascal 命名。
 
 | 类 | 命名 | 关键规则 |
 |---|---|---|
@@ -169,7 +169,7 @@ DB.TransactionScope(connectionString) // 事务
 
 ## 五、属性与建表命名陷阱（高价值坑，多为静默失败）
 
-> 见 manual/01-dev-standards.md 1.2.4 / 1.2.5.9。违反常无异常提示，务必遵守。
+> 注意：违反常无异常提示，务必遵守。
 
 - **相邻两字母不能同时大写**：`WOType` 生成字段 `W_O_TYPE`，应写 `WoType` 生成 `WO_TYPE`。
 - **属性名不能与框架属性冲突**：禁用 `Id / CreateBy / UpdateBy / CreateDate / UpdateDate / InvOrgId / IsPhantom / SyncId`，冲突会**静默映射失败且无异常提示**。
@@ -183,7 +183,7 @@ DB.TransactionScope(connectionString) // 事务
 
 ---
 
-## 六、环境搭建速查（SMOM8.2，manual/01-dev-standards.md 第2、4节）
+## 六、环境搭建速查（SMOM8.2）
 
 - **首次拿到项目**：先确保编译通过、能运行登录、加载界面，再做功能。
 - **版本要求**：VS2019.16.4+；安装 net core sdk 3.1 与 2.2（8.2+ 用 3.1，旧版用 2.2）。

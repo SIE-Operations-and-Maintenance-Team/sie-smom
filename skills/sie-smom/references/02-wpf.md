@@ -1,6 +1,6 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
 > **原文文件**：02-WPF__.md
-> **优先级**：高。与 manual/ 权威手册重合之处，以本文件规则为准（更尖锐、更可执行）。
+> **优先级**：高。
 > **覆盖范围**：WPF ViewConfig·ViewBehavior·ListViewCommand·PagingLookUpEditor·Extension·Layout
 
 ---

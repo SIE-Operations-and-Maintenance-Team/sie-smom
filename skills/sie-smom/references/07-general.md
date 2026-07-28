@@ -1,6 +1,6 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
 > **原文文件**：05-____.md
-> **优先级**：高。与 manual/ 权威手册重合之处，以本文件规则为准（更尖锐、更可执行）。
+> **优先级**：高。
 > **覆盖范围**：Algorithm注册·L10N国际化(.L10N·.L10nFormat·.t)·XML注释·框架API速查表
 
 ---
@@ -98,13 +98,13 @@ public class ItemController : DomainController
 
 ## 五、常见坑
 
-- **ViewModel 分页失效**：界面查询方法自己做数据转换时，返回对象需 `SetTotalCount` 设置总数，否则分页失效（manual/11-ajax-deploy-db.md 41.6）。
-- **报表 / Echart 返回类型**：返回数据用 `List`，**不要返回 `EntityList`**（框架对 `EntityList` 返回做了特殊处理）（manual/11-ajax-deploy-db.md 42.2）。
+- **ViewModel 分页失效**：界面查询方法自己做数据转换时，返回对象需 `SetTotalCount` 设置总数，否则分页失效。
+- **报表 / Echart 返回类型**：返回数据用 `List`，**不要返回 `EntityList`**（框架对 `EntityList` 返回做了特殊处理）。
 - **新增文件未更新 .csproj**：所有新增文件（`.cs`、`.js`、`.aspx` 等）必须同步更新对应项目的 `.csproj` 文件。JS 文件需同时配置 `<None Remove>` 和 `<EmbeddedResource Include>`，否则运行时报 `No such Entity / No such class`。这是最常见的遗漏问题，代码生成后必须确认 VS 能索引到新增文件。
 
 ---
 
-## 六、JS 事件与动态列 API（manual/09-api-js-events.md）
+## 六、JS 事件与动态列 API
 
 **事件订阅 / 激活 / 注销**（mon / fireEvent / mun）：
 

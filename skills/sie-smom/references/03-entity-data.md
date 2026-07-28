@@ -1,6 +1,6 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
 > **原文文件**：04-_____.md
-> **优先级**：高。与 manual/ 权威手册重合之处，以本文件规则为准（更尖锐、更可执行）。
+> **优先级**：高。
 > **覆盖范围**：实体属性(Property<T>)·枚举Label·Criteria·验证规则(PropertyRule·EntityRule·NotDuplicateRule·NoReferencedRule)·DAO
 
 ---
@@ -220,7 +220,7 @@ public class BaseDao<T> : IDao where T : Entity
 
 ---
 
-## 七、实体属性 5 种类型与注册（manual/03-entity-modeling.md 6.6）
+## 七、实体属性 5 种类型与注册
 
 | 类型 | 注册方法 | 说明 |
 |---|---|---|
@@ -258,7 +258,7 @@ public class Item : Entity<double>
 }
 ```
 
-## 九、实体配置 EntityConfig（manual/03-entity-modeling.md 6.8）
+## 九、实体配置 EntityConfig
 
 重写 `ConfigMeta()` 配置映射/插件，重写 `AddValidations()` 配置验证规则：
 
@@ -279,9 +279,9 @@ protected override void ConfigMeta()
 }
 ```
 
-> **注意**：业务实体通常继承 `DataEntity`（DataEntity 含 IS_PHANTOM/INV_ORG_ID/SYNC_ID 等默认列，见 SKILL.md 第6节）；直接继承 `Entity` 时需在 `ConfigMeta()` 手动 `EnablePhantoms/EnableInvOrg/EnableDataSync` 启用对应插件。**DataEntity 具体默认启用了哪些插件，拿不准时查 manual/03 6.8 或框架源码，勿臆测。**
+> **注意**：业务实体通常继承 `DataEntity`（DataEntity 含 IS_PHANTOM/INV_ORG_ID/SYNC_ID 等默认列，见 SKILL.md 第6节）；直接继承 `Entity` 时需在 `ConfigMeta()` 手动 `EnablePhantoms/EnableInvOrg/EnableDataSync` 启用对应插件。**DataEntity 具体默认启用了哪些插件，拿不准时查框架源码，勿臆测。**
 
-## 十、实体仓库查找 RF.Find（manual/03-entity-modeling.md 6.4）
+## 十、实体仓库查找 RF.Find
 
 ```csharp
 var repo  = RF.Find<User>();        // 找实体仓库单例
@@ -292,7 +292,7 @@ RF.Save(user);
 
 > 仓库定位：同程序集同命名空间下"实体名+Repository"后缀视为其仓库，或 `[RepositoryFor]` / `[EntityMatrix]` 标记；找不到则用默认 `EntityRepository<T>`。**建议用默认仓库，特殊查询逻辑放 Controller。**
 
-## 十一、标签式验证规则与缓存（manual/03-entity-modeling.md 6.7.8）
+## 十一、标签式验证规则与缓存
 
 除第五节的代码式规则，还有**标签式**规则（声明后需实体元数据初始化才生效）：
 
