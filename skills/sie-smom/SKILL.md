@@ -66,6 +66,10 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 
 > 详见各 curated 文件中的【禁止 / 错误示例 / 正确示例】小节。
 
+11. **using 指令完整性**：每个 `.cs` 文件必须在文件顶部包含所有必需的 `using` 指令（`SIE.*`、`System.*`、`RT.Service`、`RF`、`DB` 等）。禁止遗漏导致编译错误，代码生成后必须确认编译通过。
+12. **FirstOrDefault 单参数重载**：`FirstOrDefault` 只有 1 个参数重载，如需加载视图属性使用 `FirstOrDefault(new EagerLoadOptions().LoadWithViewProperty())`。禁止 `FirstOrDefault(null, ...)` 双参数形式。
+13. **Criteria 类独立文件**：Criteria 查询实体必须定义在独立 `.cs` 文件中，继承 `Criteria`，标注 `[QueryEntity]` 和 `[Serializable]`。禁止写在 Controller 或 ViewConfig 类内部。
+
 ---
 
 ## 4. 主题路由表（按任务查参考文件）
