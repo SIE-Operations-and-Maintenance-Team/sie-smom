@@ -62,7 +62,7 @@ git clone https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom.git
 | 后端 | Controller、查询规范、SplitContains、禁止全表查询、命令基类与可重写方法 |
 | Web 端 | ViewConfig、编辑器、命令、Behavior、DataQueryer、ExtJS、提交事件、属性变更事件 |
 | WPF 端 | ViewConfig、ViewBehavior、ListViewCommand、PagingLookUpEditor、Layout |
-| 数据库 | MSSQL 建表/查询、Oracle 建表/查询、类型映射、序列、索引 |
+| 数据库 | MSSQL 建表/查询、Oracle 建表/查询、MySQL 建表/查询、PostgreSQL 建表/查询、类型映射、序列、索引 |
 | 高级功能 | 附件、打印、编码规则、调度、预警、API、客制化界面、权限 |
 | 通用 | Algorithm、L10N 国际化、JS 事件 API（mon/fireEvent/mun）、常见坑 |
 
