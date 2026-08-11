@@ -53,6 +53,9 @@ jobs:
           git add "$PLUGIN_JSON" "$MARKETPLACE_JSON"
           git commit -m "chore: bump version to ${{ steps.version.outputs.new }} [skip release]"
           git tag "v${{ steps.version.outputs.new }}"
+          # 先推送 main（含版本更新提交），再推送标签。
+          # 缺失 main 推送会导致远程 plugin.json 版本号不前进，下次运行重复计算旧版本号而撞标签。
+          git push origin HEAD:main
           git push origin "v${{ steps.version.outputs.new }}"
 
       - name: 生成 Release Notes
