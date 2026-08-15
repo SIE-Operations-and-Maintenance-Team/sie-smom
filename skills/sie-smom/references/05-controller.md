@@ -1,5 +1,5 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **原文文件**：07-_____.md
+> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
 > **优先级**：高。
 > **覆盖范围**：DomainController·Query<T>规范·禁止全表查询·SplitContains·SplitDataExecute·CommonController
 
@@ -156,6 +156,42 @@ var items = RT.Service.Resolve<CommonController>().GetDatas<Item>(p => p.State =
 ## 7. Criteria 类必须定义在独立文件中
 
 Criteria 查询实体必须定义在独立的 `.cs` 文件中，禁止写在 Controller 或 ViewConfig 类内部。
+
+---
+
+## 8. 查询排序（Criteria.OrderInfoList）
+
+BS 端排序由前端网格列头触发，后端通过 Criteria 基类内置的 `OrderInfoList` 属性应用排序（ViewConfig 无需配置排序）：
+
+```csharp
+// Controller 查询时应用排序
+if (criteria.OrderInfoList != null && criteria.OrderInfoList.Count > 0)
+    q = q.OrderBy(criteria.OrderInfoList);
+
+// 或使用 Common 扩展判空
+else if (criteria.OrderInfoList.AnyExt())
+    entityQueryer = entityQueryer.OrderBy(criteria.OrderInfoList);
+```
+
+要点：
+- `OrderInfoList` 由前端列头点击自动填充（字段名/方向），后端直接 `OrderBy(criteria.OrderInfoList)` 应用
+- 分页查询必须带 `ORDER BY`（红线 4）：`OrderInfoList` 为空时给默认排序（如主键/创建时间）
+- 集合判空优先用 Common 扩展 `.AnyExt()`（等价 `Count > 0` 的简写，来源：平台 Common 实际代码）
+
+---
+
+## 9. 禁止冗余的"标准 CRUD"方法
+
+简单 CRUD 实体**不要手写**框架已提供的标准方法（`DeleteXxx` / `UpdateXxx` 等）——框架默认命令已覆盖，手写反而引入双份逻辑与维护负担（来源：平台实战反模式）：
+
+```csharp
+// 错误：框架默认删除命令已覆盖，无需手写
+public virtual void DeleteXxx(long id) { ... }   // 冗余！
+
+// 正确：仅实现框架没有的业务逻辑；标准 CRUD 交给默认命令
+```
+
+> 需要引用保护/重复校验等增强时，用验证规则（`NoReferencedRule` / `NotDuplicateRule`，见 `03-entity-data.md` 第五节），而不是重写删除方法。
 
 ```csharp
 // 正确：独立文件

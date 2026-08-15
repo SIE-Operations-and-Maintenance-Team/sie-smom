@@ -84,7 +84,7 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 
 ## 4. 主题路由表（按任务查参考文件）
 
-> `references/` 目录下 01-12 为精炼规则，始终优先读；未覆盖项需告知用户查证。
+> `references/` 目录下 01-17 为精炼规则（编号 13 历史删除未使用），始终优先读；未覆盖项需告知用户查证。
 
 | 任务 | 参考文件 |
 |---|---|
@@ -96,12 +96,16 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 | Web ViewConfig / 视图方法 / AttachChildrenProperty | `04-web-viewconfig.md` |
 | 编辑器 `UseXxxEditor()`（布尔/文本/数值/日期/枚举/图片/快码/分页查找/弹框/联动/树形/文本按钮） | `04-web-viewconfig.md` |
 | Web 前端（DataQueryer / ExtJS Layout·Controller / 通用工具 / Web Behavior） | `06-web-frontend.md` |
-| Behavior 行为 / 属性变更事件 / 附加子视图 / 提交事件 | — |
-| 通用附件 / 编码生成规则 / 配置项 / 标签单据打印 / 实体扩展属性 | — |
-| 三种查询实现 / 调度 / 预警 | — |
-| Api 接口 / JS 事件(mon·fireEvent·mun) / 关闭前事件 / GridPanel 动态列 | — |
-| 半客制 / 全客制界面 / BS 排序 / 界面权限排查 / JS 按需加载 | — |
-| Ajax(SIE.Ajax) / SMOM8.2 部署 / 框架内数据库操作(DB·原生SQL·存储过程·事务·Exists) | — |
+| Behavior 行为 / 属性变更事件 / 附加子视图 / 提交事件 | `04-web-viewconfig.md` / `02-wpf.md` |
+| 通用附件 / 编码生成规则 / 配置项 / 标签单据打印 / 实体扩展属性 | `01-architecture.md` / `03-entity-data.md` |
+| 三种查询实现 / 调度 / 预警 | `01-architecture.md` |
+| Api 接口 / JS 事件(mon·fireEvent·mun) / 关闭前事件 / GridPanel 动态列 | `07-general.md` |
+| 半客制 / 全客制界面 | `06-web-frontend.md`（第十四节） |
+| BS 排序（Criteria.OrderInfoList）/ 界面权限排查（AssignAuthorize + EntityDataAuth） | `05-controller.md` / `04-web-viewconfig.md` / `07-general.md` |
+| JS 按需加载（Ext.require） | `06-web-frontend.md` |
+| 框架内数据库操作（DB·原生 SQL·存储过程·数据权限 Exists） | `07-general.md` |
+| SMOM8.2 部署 | —（需查证） |
+| PDA 前端（Vue2）编码规范 | `12-pda-frontend.md` + 本 SKILL.md 第 8 节 |
 | WPF（ViewConfig / Behavior / Command / Editor / Layout） | `02-wpf.md` |
 | 通用（Algorithm / L10N / XML 注释 / 框架 API 速查） | `07-general.md` |
 | MSSQL 建表 | `09-mssql-table.md` |
@@ -131,7 +135,6 @@ SplitContains(fn) / SplitDataExecute(list, batch=>fn)  // 大集合分批 IN
 .t()                                  // JS 国际化
 .IsNotEmpty() / .IsNullOrEmpty()      // 字符串判空
 SIE.invokeDataQuery({type,method,params,token,success})  // 前端调后端 DataQueryer
-SIE.Ajax({...})                       // 前端 ajax 请求后台方法
 ```
 
 **编辑器（节选）**：

@@ -1,5 +1,5 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **原文文件**：03-____.md
+> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
 > **优先级**：高。
 > **覆盖范围**：DataQueryer分层·ExtJS Layout·Controller·通用工具·JS嵌入资源·禁止前端直访DB
 
@@ -237,3 +237,80 @@ this.mon(entity, "propertyChanged", this._onEntityPropertyChanged, this);
 | 预编译规则 | 继承 `EntityRule<T>` / `NotDuplicateRule<T>` / `NoReferencedRule<T>` | 见 `03-entity-data.md` 第五节 |
 
 > 优先用标准规则（实体元数据更新效率低）。
+
+---
+
+## 十二、JS 按需加载（Ext.require）
+
+业务 JS 动态加载其他 Ext 类用 `Ext.require(className)`（真实用法见平台 EMS 模块 `SelRunStandardValueCommand.js`）：
+
+```javascript
+_checkParameter: function () {
+    var dataParams = this.dataParams;
+    if (Ext.isEmpty(dataParams.targetClassName)) {
+        SIE.emptyArgument('targetClassName');
+    }
+    Ext.require(dataParams.targetClassName);   // 按需加载目标类（首次加载，后续走缓存）
+},
+onLoad: function (store, records, successful, operation, eOpts) {
+    // 加载完成后即可使用目标类 / 配合 SIE.invokeDataQuery 拉数据
+    SIE.invokeDataQuery({
+        type: "SIE.Web.Xxx.DataQuery.XxxDataQueryer",
+        method: "GetXxxIds",
+        params: [me._sourceId],
+        async: false,
+        success: function (ids) { /* ... */ }
+    });
+}
+```
+
+要点：
+- `Ext.require` 支持传字符串类名（`Ext.require(dataParams.targetClassName)`），适合"配置决定加载哪个类"的场景
+- 加载与使用分离：`Ext.require` 只加载，实例化/调用在回调或后续方法中
+- 配合 `SIE.invokeDataQuery` 走 DataQueryer 标准数据通道，禁止在 JS 中直访数据库
+
+---
+
+## 十三、FormEdit 弹窗的 showView 陷阱
+
+`View.FormEdit()` 弹窗编辑模式下，Insert/Edit Command 的 `showView()` **必须显式实现完整弹窗逻辑，禁止 `me.callParent([editEntity])`**（callParent 在 FormEdit 模式下弹窗可能无法正确打开，来源：平台实战反模式）：
+
+```javascript
+// 错误：callParent 替代
+showView: function (editEntity) {
+    me.callParent([editEntity]);
+}
+
+// 正确：SIE.AutoUI.getMeta 缓存元数据 + SIE.App.showDialog 打开弹窗
+showView: function (editEntity) {
+    var me = this;
+    if (!this.viewMeta) {
+        SIE.AutoUI.getMeta({
+            async: false, isDetail: true, ignoreQuery: true,
+            model: this.view.model,
+            callback: function (meta) {
+                meta.token = me.view.token;
+                me.viewMeta = meta;
+            }
+        });
+    }
+    /* 用 me.viewMeta 构建弹窗配置 → SIE.App.showDialog(...) */
+}
+```
+
+## 十四、半客制化与全客制化界面
+
+框架生成的界面无法满足需求时的两级定制方案（来源：平台前端进阶主题）：
+
+| 方案 | 用法 | 说明 |
+|---|---|---|
+| **半客制化** | 模块类继承 `SpecificCustomUIModule`（`[Module(SpecificCustomUIModuleRuntime)]`），JS 端 `Ext.define` 继承 `SIE.CustomUIModule` 并重写 `renderView` | 在框架界面基础上做局部定制 |
+| **全客制化** | ViewConfig 标记 `[CustomUI]` 并继承 `CustomUIViewConfig<T>` | 完全自定义界面 |
+
+```csharp
+[CustomUI]
+public class CustomUIViewConfig : CustomUIViewConfig<CustomUIEntity>
+{
+    protected override void ConfigView() { /* 完全自定义 */ }
+}
+```

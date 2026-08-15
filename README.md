@@ -1,46 +1,33 @@
 # sie-smom
 
-SIE SMOM 平台（.NET 6.0 MES + SIE 自研框架）的 Claude Code Skill 集合，参考 [Superpower](https://github.com/obra/superpowers) 设计。
+赛意 SMOM 平台（.NET 6.0 MES + SIE 自研框架）的 **Claude Code Skill**，参考 [Superpower](https://github.com/obra/superpowers) 设计。
 
-让 AI 精通 SMOM 平台特性，**防幻写**--编写或审查 SMOM 的 C#/JS/SQL 代码时，AI 先查参考底库再写，不臆造框架 API。
+让 AI 精通 SMOM 平台特性，**防幻写**——编写或审查 SMOM 的 C#/JS/SQL 代码时，AI 先查参考底库再写，不臆造框架 API。
 
 ## How it works
 
-SMOM 是赛意自研框架，API 面广且无公开文档，AI 凭记忆写必然臆造（错误的编辑器名、缺失 `IS_PHANTOM`、前端直访 DB、主键用 IDENTITY 等）。本 skill 把平台特性抽成参考底库，强制 AI「先查再写、找不到就明说」：
+SMOM 是赛意自研框架，API 面广且无公开文档，AI 凭记忆写必然臆造（错误的编辑器名、缺失 `IS_PHANTOM`、前端直访 DB、主键用 IDENTITY 等）。本 skill 把平台特性抽成 **16 份精炼参考底库**（编号 01-17，13 号历史删除），并借鉴平台外部规范精华（实战陷阱、防臆造 API、前端进阶等），强制 AI「先查再写、找不到就明说」：
 
 1. **先查再写**：动手写实体 / Controller / ViewConfig / 命令 / SQL 前，先查 `references/` 找真实 API 签名与示例
 2. **照搬模式**：复用参考库的命名、基类、属性、参数顺序
 3. **找不到就明说**：参考库未覆盖的 API，明确告知「需查证」，不编造
 
-详见 `skills/sie-smom/SKILL.md` 第 2 节（防幻写协议）和第 3 节（10 条红线）。
+详见 `skills/sie-smom/SKILL.md` 第 2 节（防幻写协议）和第 3 节（13 条红线）。
 
 ## Installation
 
 ### Claude Code 插件市场（推荐）
 
-注册 marketplace（**一次性**，后续新增 skill 不用换地址）：
-
 ```bash
 /plugin marketplace add SIE-Operations-and-Maintenance-Team/sie-smom
-```
-
-安装 plugin：
-
-```bash
 /plugin install sie-smom@sie-smom
 ```
 
-后续仓库新增 skill 时，客户端执行 `/plugin marketplace update` 刷新即可安装新 skill，**无需重新 `marketplace add`**。
+后续仓库更新时，执行 `/plugin marketplace update` 刷新即可，无需重新添加。
 
 ### cc-switch
 
-在 `cc-switch` 中添加仓库：
-
-```
-https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom
-```
-
-`cc-switch` 会自动扫描 `skills/` 目录，刷新即可看到。
+在 `cc-switch` 中添加仓库 `https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom`，它会自动扫描 `skills/` 目录。
 
 ### 手动克隆
 
@@ -49,9 +36,7 @@ cd ~/.claude/skills
 git clone https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom.git
 ```
 
-## 可用 Skills
-
-### sie-smom ⭐
+## 可用 Skill：sie-smom ⭐
 
 **SIE SMOM 平台开发专家** - 让 AI 精通 SMOM 平台特性，防幻写。
 
@@ -64,7 +49,11 @@ git clone https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom.git
 | WPF 端 | ViewConfig、ViewBehavior、ListViewCommand、PagingLookUpEditor、Layout |
 | 数据库 | MSSQL 建表/查询、Oracle 建表/查询、MySQL 建表/查询、PostgreSQL 建表/查询、类型映射、序列、索引 |
 | 高级功能 | 附件、打印、编码规则、调度、预警、API、客制化界面、权限 |
-| 通用 | Algorithm、L10N 国际化、JS 事件 API（mon/fireEvent/mun）、常见坑 |
+| 通用 | Algorithm、L10N 国际化、JS 事件 API（mon/fireEvent/mun）、常见坑、防臆造 API 速查 |
+
+## 查证顺序（防幻写）
+
+`skills/sie-smom/references/`（精炼规则，优先）→ 项目实际代码。references 未覆盖的 API 按防幻写协议明确「需查证」，不臆造。
 
 ## 目录结构
 
@@ -74,24 +63,20 @@ sie-smom/
 │   ├── plugin.json         ← plugin 元数据
 │   └── marketplace.json    ← marketplace 声明（plugins 列表）
 ├── skills/
-│   └── sie-smom/           ← 实际 skill（SKILL.md + references/）
-│       ├── SKILL.md
-│       └── references/
+│   └── sie-smom/           ← 实际 skill（SKILL.md + references/ 01-17）
+│       ├── SKILL.md        ← Skill 入口（平台本质、防幻写协议、13 条红线、路由表）
+│       └── references/     ← 参考底库（16 份精炼规则）
 ├── README.md
 ├── CLAUDE.md
 ├── LICENSE
 └── update.ps1 / update.sh
 ```
 
-> **新增 skill**：在 `skills/` 下建新目录（含 `SKILL.md`），并在 `.claude-plugin/marketplace.json` 的 `plugins` 数组追加条目。客户端刷新 marketplace 即可安装，无需换仓库地址。
-
 ## 如何贡献
 
-1. 在 `skills/` 下创建新目录，如 `skills/xxx-skill/`
-2. 目录根须包含 `SKILL.md` 作为入口
-3. 在 `.claude-plugin/marketplace.json` 的 `plugins` 数组追加条目
-4. 在 `README.md` 中添加介绍
-5. 提交 PR
+1. 修改 `skills/sie-smom/` 下的文件
+2. 更新 `README.md` 与 `CLAUDE.md` 中的相关说明
+3. 提交 PR
 
 ## License
 

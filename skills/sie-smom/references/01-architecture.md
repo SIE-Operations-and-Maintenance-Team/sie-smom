@@ -1,5 +1,5 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **原文文件**：01-____.md
+> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
 > **优先级**：高。
 > **覆盖范围**：项目分层(Module/Web/Wpf/xUnit/Job/Statistics)·Module注册·DataProvider·IoC(RT.Service·RF·DB)
 

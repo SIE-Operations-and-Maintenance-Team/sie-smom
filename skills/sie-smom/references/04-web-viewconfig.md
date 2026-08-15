@@ -1,5 +1,5 @@
 > **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **原文文件**：06-____.md
+> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
 > **优先级**：高。
 > **覆盖范围**：WebViewConfig·常用方法·AttachChildrenProperty分页·非重写视图属性显示
 
@@ -70,6 +70,15 @@ public class AbnormalInforViewConfig : WebViewConfig<AbnormalInfor>
 | View.Property(p => p.XXX).UseCatalogEditor(e => {...}) | 目录编辑器 |
 | View.Property(p => p.XXX).UseDefectLookupEditor(p => {...}) | 缺陷查找编辑器 |
 | View.Property(p => p.XXX).UsePagingLookUpEditor(...) | 分页查找编辑器 |
+| View.Property(p => p.XXX).UseCheckEditor(p => {...}) | 布尔复选框（真实用法：`UseCheckEditor(p => p.AllowBlank = false)`） |
+| View.Property(p => p.XXX).UseSpinEditor(p => {...}) | 数值编辑器（真实用法：`UseSpinEditor(p => p.AllowDecimals = false)`） |
+| View.Property(p => p.XXX).UseDateRangeEditor(p => {...}) | 日期范围（真实用法：`p.DateFormat = "Y/m/d"; p.DateRangeType = ...`） |
+| View.Property(p => p.XXX).UseDateTimeEditor() | 日期时间（可链 `.ShowInList(160).Readonly(IsReadonlyExp)`） |
+| View.Property(p => p.XXX).UseEnumEditor(c => {...}) | 枚举下拉（真实用法：`c.AllowBlank = true`） |
+| View.Property(p => p.XXX).UseImageComponentEditor(p => {...}) | 图片（真实用法：`p.Width = 300; p.Height = 400; p.Border = ...`） |
+| View.Property(p => p.XXX).UsePagingLookUpPopupEditor(p => {...}) | 分页查找弹框（真实用法：`p.Editable = true; p.MultiOrSelect = ...`） |
+| View.Property(p => p.XXX).UseTextButtonFieldEditor(p => {...}) | 文本按钮（真实用法：`p.ExtendJsObj = "SIE.Web.Xxx.Editors.XxxEditor"`） |
+| ~~UseTextRangeEditor / UseSpinRangeEditor~~ | 文本范围/数值范围编辑器：平台实际项目未见调用，**需查证后再用** |
 | View.ChildrenProperty(p => p.XXXList) | 子表属性 |
 | View.AttachChildrenProperty(...) | 附加外部实体列表 |
 | View.HasDetailColumnsCount(5) | 详情列数 |
