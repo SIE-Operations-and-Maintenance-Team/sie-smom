@@ -6,7 +6,7 @@
 
 ## How it works
 
-SMOM 是赛意自研框架，API 面广且无公开文档，AI 凭记忆写必然臆造（错误的编辑器名、缺失 `IS_PHANTOM`、前端直访 DB、主键用 IDENTITY 等）。本 skill 把平台特性抽成 **22 份参考底库**（编号 01-23，13 号历史删除）：
+SMOM 是赛意自研框架，API 面广且无公开文档，AI 凭记忆写必然臆造（错误的编辑器名、缺失 `IS_PHANTOM`、前端直访 DB、主键用 IDENTITY 等）。本 skill 把平台特性抽成 **25 份参考底库**（编号 01-23，13 号历史删除；18 号 Web 命令配方按任务域拆为 4 份）：
 
 - **01-07 精炼规则**：架构、实体、Controller、ViewConfig 等核心开发规范
 - **08-17 数据库规范**：MSSQL/Oracle/MySQL/PostgreSQL 四库建表与查询
@@ -52,7 +52,7 @@ git clone https://github.com/SIE-Operations-and-Maintenance-Team/sie-smom.git
 | 实体层 | 实体属性 5 类型、引用/主从关系、EntityConfig、实体插件、验证规则、DAO |
 | 后端 | Controller、查询规范、SplitContains、禁止全表查询、命令基类与可重写方法 |
 | Web 端 | ViewConfig、编辑器、命令、Behavior、DataQueryer、ExtJS、提交事件、属性变更事件 |
-| Web 命令配方 | 保存/提交/导入导出/打印/添加/选择/弹窗查看全配方（23 篇，`18-web-commands.md`） |
+| Web 命令配方 | 保存/提交/导入导出/打印/添加/选择/弹窗查看全配方（23 篇，按任务域拆为 `18-web-commands-form` / `import-export` / `add-lookup` / `print-attach` 4 份） |
 | Web 行为与编辑器 | 单元格/行变色、状态栏、分页、排序、统计行、模糊枚举/枚举多选编辑器、透视表动态列（14 篇，`19-web-behaviors.md`） |
 | Web 前端进阶 | invokeCommand、mon/fireEvent/mun、SIE.Msg、三档客制化（LayoutClass/UIGenerator/ModuleRuntime）、DM_ 跨层传参（24 篇，`20-web-frontend-misc.md`） |
 | WPF 端 | ViewConfig、ViewBehavior、ListViewCommand、PagingLookUpEditor、Layout；弹窗命令/行为/编辑器/控件/工具配方（28 篇，`21-wpf-recipes.md`） |
@@ -76,7 +76,7 @@ sie-smom/
 ├── skills/
 │   └── sie-smom/           ← 实际 skill（SKILL.md + references/ 01-23）
 │       ├── SKILL.md        ← Skill 入口（平台本质、防幻写协议、13 条红线、路由表）
-│       └── references/     ← 参考底库（22 份：01-07 精炼规则 / 08-17 数据库规范 / 18-23 配方库）
+│       └── references/     ← 参考底库（25 份：01-07 精炼规则 / 08-17 数据库规范 / 18-23 配方库）
 ├── README.md
 ├── CLAUDE.md
 ├── LICENSE

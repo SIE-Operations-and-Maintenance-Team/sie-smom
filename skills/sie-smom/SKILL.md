@@ -84,7 +84,9 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 
 ## 4. 主题路由表（按任务查参考文件）
 
-> `references/` 目录下 01-07 为精炼规则（编号 13 历史删除未使用），08-17 为数据库规范，18-23 为配方库（蒸馏自 SMOM 开发手册 2026-08 版本，含手册原文配方索引），始终优先读；未覆盖项需告知用户查证。
+> `references/` 目录下 01-07 为精炼规则（编号 13 历史删除未使用），08-17 为数据库规范，18-23 为配方库（蒸馏自 SMOM 开发手册 2026-08 版本，含手册原文配方索引；18 号 Web 命令配方按任务域拆为 4 份），始终优先读；未覆盖项需告知用户查证。
+>
+> **按需读取（省上下文）**：references 单份 3K-33K，**不要整份读入**。先按路由表定文件 → 用 Grep 在该文件内定位章节标题（如 `## 七、` / `### 20.2`）→ 按行号区间 Read 对应片段；Grep 不到目标内容再考虑整份读。
 
 | 任务 | 参考文件 |
 |---|---|
@@ -92,19 +94,22 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 | 实体建模 / 属性 / 标签 / 配置 / UML-ModelFirst | `03-entity-data.md` |
 | 实体验证规则 / DAO | `03-entity-data.md` |
 | 后端 Controller / 查询规范 | `05-controller.md` |
-| 命令（增删改查·保存·选择·启停·复制新增·导入导出·合并拆分·上传） | `05-controller.md` + `18-web-commands.md`（Web 命令配方 23 篇） |
+| 命令（增删改查·保存·选择·启停·复制新增·导入导出·合并拆分·上传） | `05-controller.md` + `18-web-commands-*.md`（Web 命令配方 23 篇，按任务域拆 4 份，见下面 4 行） |
 | Web ViewConfig / 视图方法 / AttachChildrenProperty | `04-web-viewconfig.md` + `20-web-frontend-misc.md`（第十节 视图配置方法） |
 | 编辑器 `UseXxxEditor()`（布尔/文本/数值/日期/枚举/图片/快码/分页查找/弹框/联动/树形/文本按钮） | `04-web-viewconfig.md` |
 | Web 前端（DataQueryer / ExtJS Layout·Controller / 通用工具 / Web Behavior） | `06-web-frontend.md` + `20-web-frontend-misc.md`（invokeCommand/事件/S.Msg/AutoUI/弹框/客制化三档/DM_ 机制） |
 | Behavior 行为 / 属性变更事件 / 附加子视图 / 提交事件 | `04-web-viewconfig.md` / `02-wpf.md` / `19-web-behaviors.md`（Web 行为配方 14 篇：变色/状态栏/分页/排序/统计行/命令时机等） |
-| Web 命令开发（保存/提交/导入/导出/打印/添加/选择/弹窗查看 全配方） | `18-web-commands.md` |
+| Web 命令-表单保存 / 表单提交（局部·全页刷新） / 列表保存 | `18-web-commands-form.md`（4 篇） |
+| Web 命令-导入 / 导出（多表聚合·通用·自定义模板·子表·增强·ExporterSlim·填界面不落库） | `18-web-commands-import-export.md`（7 篇） |
+| Web 命令-添加（表单·行内+自动单号） / 弹窗查看 / 选择（LookupCommandBase 20.1-20.4） | `18-web-commands-add-lookup.md`（7 篇） |
+| Web 命令-打印（版本差异·标签·单据基类） / 查看附件 / 列表查找 | `18-web-commands-print-attach.md`（5 篇） |
 | Web 行为 / 扩展编辑器开发（模糊枚举/枚举多选/透视表动态列/canExecute 包装） | `19-web-behaviors.md` |
 | 通用附件 / 编码生成规则 / 配置项 / 标签单据打印 / 实体扩展属性 | `01-architecture.md` / `03-entity-data.md` / `22-host-tools-cases.md`（第十二节 配置项/预警/快码/打印增强补充） |
 | 三种查询实现 / 调度 / 预警 | `01-architecture.md` + `22-host-tools-cases.md`（调度防并发/预警三件套） |
 | Api 接口 / JS 事件(mon·fireEvent·mun) / 关闭前事件 / GridPanel 动态列 | `07-general.md` + `20-web-frontend-misc.md` |
 | 半客制 / 全客制界面 | `06-web-frontend.md`（第十四节）+ `20-web-frontend-misc.md`（第七节 LayoutClass/UIGenerator/ModuleRuntime 三档） |
 | BS 排序（Criteria.OrderInfoList）/ 界面权限排查（AssignAuthorize + EntityDataAuth） | `05-controller.md` / `04-web-viewconfig.md` / `07-general.md` / `23-problems.md`（字符串数值排序） |
-| JS 按需加载（Ext.require） | `06-web-frontend.md` + `18-web-commands.md`（20.4 计数器+onReady）/ `23-problems.md`（第十一节 JS 跨模块） |
+| JS 按需加载（Ext.require） | `06-web-frontend.md` + `18-web-commands-add-lookup.md`（20.4 计数器+onReady）/ `23-problems.md`（第十一节 JS 跨模块） |
 | 框架内数据库操作（DB·原生 SQL·存储过程·数据权限 Exists） | `07-general.md` + `22-host-tools-cases.md`（SqlCreator / DbBulkProvider 批量操作） |
 | 服务端工具（ObjectUtil/EntityUtil/DataChecker/CommonEntityController/HttpUtil/RedisUtil/ThreadCacheUtil） | `22-host-tools-cases.md` |
 | 外部系统交互（HTTP 带日志/交互日志 ApiLog/客制化 WebApi 报文/钉钉·邮件·企微推送） | `22-host-tools-cases.md` |
@@ -206,7 +211,10 @@ references/
 ├── 15-mysql-table.md          # MySQL 建表规范
 ├── 16-postgresql-query.md     # PostgreSQL 查询规范
 ├── 17-postgresql-table.md     # PostgreSQL 建表规范
-├── 18-web-commands.md         # Web 命令配方库（保存/提交/导入导出/打印/添加/选择/弹窗查看，23 篇）
+├── 18-web-commands-form.md    # Web 命令配方·表单/列表保存与提交（4 篇）
+├── 18-web-commands-import-export.md  # Web 命令配方·导入导出（7 篇）
+├── 18-web-commands-add-lookup.md     # Web 命令配方·添加/选择/弹窗查看（7 篇）
+├── 18-web-commands-print-attach.md   # Web 命令配方·打印/附件/查找（5 篇）
 ├── 19-web-behaviors.md        # Web 行为与扩展编辑器配方库（14 篇）
 ├── 20-web-frontend-misc.md    # Web 前端基础与界面配方库（调后台/事件/消息/客制化三档/DM_ 机制等，24 篇）
 ├── 21-wpf-recipes.md          # WPF 端配方库（弹窗命令/行为/编辑器/控件/工具，28 篇）

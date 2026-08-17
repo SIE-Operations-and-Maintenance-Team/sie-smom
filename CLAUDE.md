@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 本仓库是赛意 SMOM 平台（.NET 6.0 MES + SIE 自研框架）开发的 **Claude Code Skill**：`skills/sie-smom/` 防幻写参考底库。
 
-- **防幻写参考底库**（`skills/sie-smom/`）：22 份文档（编号 01-23，13 号历史删除）：01-07 精炼规则、08-17 数据库规范、18-23 配方库（蒸馏自 SMOM 开发手册 2026-08 版，共 123 篇配方）。AI 写代码前先查证，不臆造框架 API。
+- **防幻写参考底库**（`skills/sie-smom/`）：25 份文档（编号 01-23，13 号历史删除；18 号 Web 命令配方按任务域拆为 4 份）：01-07 精炼规则、08-17 数据库规范、18-23 配方库（蒸馏自 SMOM 开发手册 2026-08 版，共 123 篇配方）。AI 写代码前先查证，不臆造框架 API。
 - 参考底库已借鉴平台外部规范精华（实战陷阱、防臆造 API、前端进阶等），按本库【禁止/错误示例/正确示例】风格融入各 references。
 
 参考 [Superpower](https://github.com/obra/superpowers) 设计。
@@ -21,9 +21,9 @@ sie-smom/
 ├── skills/
 │   └── sie-smom/           ← 实际 skill（SKILL.md + references/ 01-23）
 │       ├── SKILL.md        ← Skill 入口（平台本质、防幻写协议、13 条红线、路由表）
-│       └── references/     ← 参考底库（22 份：01-07 精炼规则 / 08-17 数据库规范 / 18-23 配方库）
+│       └── references/     ← 参考底库（25 份：01-07 精炼规则 / 08-17 数据库规范 / 18-23 配方库）
 │           ├── 01-architecture.md ～ 17-postgresql-table.md
-│           └── 18-web-commands.md ～ 23-problems.md
+│           └── 18-web-commands-*.md（4 份）～ 23-problems.md
 ├── README.md
 ├── CLAUDE.md
 ├── LICENSE
