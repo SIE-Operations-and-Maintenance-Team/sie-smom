@@ -77,7 +77,7 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 > 详见各 curated 文件中的【禁止 / 错误示例 / 正确示例】小节。
 
 11. **using 指令完整性**：每个 `.cs` 文件必须在文件顶部包含所有必需的 `using` 指令（`SIE.*`、`System.*`、`RT.Service`、`RF`、`DB` 等）。禁止遗漏导致编译错误，代码生成后必须确认编译通过。
-12. **FirstOrDefault 单参数重载**：`FirstOrDefault` 只有 1 个参数重载，如需加载视图属性使用 `FirstOrDefault(new EagerLoadOptions().LoadWithViewProperty())`。禁止 `FirstOrDefault(null, ...)` 双参数形式。
+12. **FirstOrDefault / ToList 参数形态**：`FirstOrDefault` 只有 1 个参数重载，如需加载视图属性使用 `FirstOrDefault(new EagerLoadOptions().LoadWithViewProperty())`，禁止 `FirstOrDefault(null, ...)` 双参数形式。`ToList` 相反——`EagerLoadOptions` 是第 2 参数：`ToList(pagingInfo, new EagerLoadOptions().LoadWithViewProperty())`，勿按 `FirstOrDefault` 单参数形态套用。
 13. **Criteria 类独立文件**：Criteria 查询实体必须定义在独立 `.cs` 文件中，继承 `Criteria`，标注 `[QueryEntity]` 和 `[Serializable]`。禁止写在 Controller 或 ViewConfig 类内部。
 
 ---
@@ -94,14 +94,14 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 | 实体建模 / 属性 / 标签 / 配置 / UML-ModelFirst | `03-entity-data.md` |
 | 实体验证规则 / DAO | `03-entity-data.md` |
 | 后端 Controller / 查询规范 | `05-controller.md` |
-| 命令（增删改查·保存·选择·启停·复制新增·导入导出·合并拆分·上传） | `05-controller.md` + `18-web-commands-*.md`（Web 命令配方 23 篇，按任务域拆 4 份，见下面 4 行） |
-| Web ViewConfig / 视图方法 / AttachChildrenProperty | `04-web-viewconfig.md` + `20-web-frontend-misc.md`（第十节 视图配置方法） |
+| 命令（增删改查·保存·选择·启停·复制新增·导入导出·合并拆分·上传） | `05-controller.md` + `18-web-commands-*.md`（Web 命令配方 25 篇，按任务域拆 4 份，见下面 4 行） |
+| Web ViewConfig / 视图方法 / AttachChildrenProperty / 查询条件（CriteriaQuery·ConditionQueryType 两模式） / 无菜单配置实体按钮入口 | `04-web-viewconfig.md` + `20-web-frontend-misc.md`（第十节 视图配置方法） |
 | 编辑器 `UseXxxEditor()`（布尔/文本/数值/日期/枚举/图片/快码/分页查找/弹框/联动/树形/文本按钮） | `04-web-viewconfig.md` |
 | Web 前端（DataQueryer / ExtJS Layout·Controller / 通用工具 / Web Behavior） | `06-web-frontend.md` + `20-web-frontend-misc.md`（invokeCommand/事件/S.Msg/AutoUI/弹框/客制化三档/DM_ 机制） |
 | Behavior 行为 / 属性变更事件 / 附加子视图 / 提交事件 | `04-web-viewconfig.md` / `02-wpf.md` / `19-web-behaviors.md`（Web 行为配方 14 篇：变色/状态栏/分页/排序/统计行/命令时机等） |
 | Web 命令-表单保存 / 表单提交（局部·全页刷新） / 列表保存 | `18-web-commands-form.md`（4 篇） |
 | Web 命令-导入 / 导出（多表聚合·通用·自定义模板·子表·增强·ExporterSlim·填界面不落库） | `18-web-commands-import-export.md`（7 篇） |
-| Web 命令-添加（表单·行内+自动单号） / 弹窗查看 / 选择（LookupCommandBase 20.1-20.4） | `18-web-commands-add-lookup.md`（7 篇） |
+| Web 命令-添加（表单·行内+自动单号） / 弹窗查看 / 选择（LookupCommandBase 20.1-20.4） / 子表行内增删 / 列表工具栏打开聚合页 | `18-web-commands-add-lookup.md`（9 篇） |
 | Web 命令-打印（版本差异·标签·单据基类） / 查看附件 / 列表查找 | `18-web-commands-print-attach.md`（5 篇） |
 | Web 行为 / 扩展编辑器开发（模糊枚举/枚举多选/透视表动态列/canExecute 包装） | `19-web-behaviors.md` |
 | 通用附件 / 编码生成规则 / 配置项 / 标签单据打印 / 实体扩展属性 | `01-architecture.md` / `03-entity-data.md` / `22-host-tools-cases.md`（第十二节 配置项/预警/快码/打印增强补充） |
@@ -213,7 +213,7 @@ references/
 ├── 17-postgresql-table.md     # PostgreSQL 建表规范
 ├── 18-web-commands-form.md    # Web 命令配方·表单/列表保存与提交（4 篇）
 ├── 18-web-commands-import-export.md  # Web 命令配方·导入导出（7 篇）
-├── 18-web-commands-add-lookup.md     # Web 命令配方·添加/选择/弹窗查看（7 篇）
+├── 18-web-commands-add-lookup.md     # Web 命令配方·添加/选择/弹窗查看/子表行内增删/聚合页跳转（9 篇）
 ├── 18-web-commands-print-attach.md   # Web 命令配方·打印/附件/查找（5 篇）
 ├── 19-web-behaviors.md        # Web 行为与扩展编辑器配方库（14 篇）
 ├── 20-web-frontend-misc.md    # Web 前端基础与界面配方库（调后台/事件/消息/客制化三档/DM_ 机制等，24 篇）

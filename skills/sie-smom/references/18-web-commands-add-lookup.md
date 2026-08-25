@@ -16,6 +16,8 @@
 | 16 | 添加命令-行内编辑+自动生成单号 | 十六 |
 | 19 | 通用弹窗查看命令 | 十九 |
 | 20 | 选择命令（LookupCommandBase 全家，含 20.1-20.4） | 二十 |
+| 21 | 子表行内添加/删除命令（内嵌明细行增删） | 二十一 |
+| 22 | 列表工具栏打开聚合页命令（页面跳转，纯 JS） | 二十二 |
 
 ---
 
@@ -448,3 +450,83 @@ save: function (win) {
 ```
 
 此变体适合"从选择目标抓多列数据直接填子表"场景；配合 `me._sourceViewSelectItems` 防重复添加。
+
+---
+
+## 二十一、Web子表行内添加/删除命令（内嵌明细行增删）
+
+适用：主表 `ChildrenProperty` 内嵌子表需要"添加行 / 删除行"按钮——只 `View.InlineEdit()` 不配命令时子表**没有任何操作按钮**，无法维护行。
+
+三件套（PackingLabelAdjustDetail / SpecialItemMarkConfigDetail 实证）：
+
+**1. cs 命令**（一个文件可放多个命令类）：
+
+```csharp
+[JsCommand("SIE.Web.WMS.Common.Commands.AddXxxDtlCommand")]
+public class AddXxxDtlCommand : ViewCommand
+{
+    /// <summary>
+    /// 添加
+    /// </summary>
+    protected override object Excute(ViewArgs args, string scope)
+    {
+        return true;   // 前端 extend SIE.cmd.Add 负责新增行；需要默认值时在此构造实体并返回
+    }
+}
+
+[JsCommand("SIE.Web.WMS.Common.Commands.DeleteXxxDtlCommand")]
+public class DeleteXxxDtlCommand : DeleteCommand { }   // 空类即可
+```
+
+**2. js 命令**（csproj 必须 `None Remove` + `EmbeddedResource Include`，缺一运行时报 No such class）：
+
+```javascript
+SIE.defineCommand('SIE.Web.WMS.Common.Commands.AddXxxDtlCommand', {
+    extend: 'SIE.cmd.Add',
+    meta: { text: "添加", group: "edit", iconCls: "iconfont icon-AddEntity icon-green" },
+});
+SIE.defineCommand('SIE.Web.WMS.Common.Commands.DeleteXxxDtlCommand', {
+    extend: 'SIE.cmd.Delete',
+    meta: { text: "删除", group: "edit", iconCls: "icon-DeleteEntity icon-red" },
+    canExecute: function (view) {
+        return view.getSelection() != null && view.getSelection().length > 0;   // 无选中禁用
+    },
+});
+```
+
+**3. 子表 ViewConfig 挂载**：
+
+```csharp
+protected override void ConfigListView()
+{
+    View.ClearCommands();
+    View.InlineEdit();
+    View.UseCommands(
+        typeof(AddXxxDtlCommand).FullName,
+        typeof(DeleteXxxDtlCommand).FullName);
+    using (View.OrderProperties()) { /* 列配置 */ }
+}
+```
+
+> 有单据状态的子表可参照 `AddPackLabelAdjustDtlCommand.js` 在 `canExecute` 里判 `view.getParent().getCurrent().getBillState()`；纯配置子表无需。
+
+## 二十二、Web列表工具栏打开聚合页命令（页面跳转，纯 JS）
+
+适用：从一个列表页打开另一个实体的维护页（如物料列表 → 备货等级管理 / 特殊物料标识配置）。**纯 JS 命令即可，无 cs**：
+
+```javascript
+SIE.defineCommand('SIE.Web.WMS.Common.Commands.SpecialItemMarkConfigCommand', {
+    meta: { text: "特殊物料标识配置", group: "config", iconCls: "icon-DistributeObjectsHorizontal icon-blue" },
+    execute: function (listView, source) {
+        CRT.Workbench.addPage({
+            title: '特殊物料标识配置'.t(),
+            entityType: 'SIE.WMS.Common.SpecialItemMarkConfig',   // 目标实体全名
+            module: listView.module,
+            ignoreQuery: false,
+            isAggt: true
+        });
+    }
+});
+```
+
+挂载与配套：主档 ViewConfig `View.UseCommand("全名")`（字符串引用，跨模块无编译依赖）；目标实体无独立菜单时用 `AssignAuthorize<T>(typeof(宿主实体))` 挂权限——完整三件套见 04-web-viewconfig §十一。

@@ -124,6 +124,8 @@ View.AttachChildrenProperty(typeof(SampleTestProject), o =>
 });
 ```
 
+> **附加列表的元素也可以是 ViewModel（非实体）**：如 Asn 页"送货明细"页签挂 `AsnDeliveryDetailViewModel`（内存构建、不持久化）。VM 属性用 `P<VM>.Register` 注册（含 `[Label]`），数据由 Controller 查询后逐行组装（外部信息如仓库 Id 在方法入口取一次，循环内纯内存赋值，避免 N+1）。VM 上**不要**用 `RegisterReadOnly` 计算属性（VM 无实体配置）；列表页签取数仍走 `AttachChildrenProperty(typeof(VM), ...)` + Controller。
+
 ## 四、非重写视图方法属性显示规范
 
 **在自定义的非重写视图方法中（如 `ConfigXxxView()`），属性必须显式使用 `.Readonly().Show(ShowInWhere.All)` 才能在前端显示。**
@@ -161,6 +163,84 @@ void ConfigWritingReportView()
 | `ConfigSelectionView()` | 下拉视图 | 不配操作命令 |
 | `ConfigImportView()` | 导入视图 | 不配命令 |
 | 自定义 `ConfigXxxView()` | 自定义视图 | `UseDefaultCommands()` 不生效；需 `DeclareExtendViewGroup` + `.Show()`（见第四节） |
+
+### 5.1 查询条件配置（两种模式）
+
+| 模式 | 做法 | 适用 |
+|---|---|---|
+| A. 实体自查询 | 主实体标 `[CriteriaQuery]`，ViewConfig 重写 `ConfigQueryView()` | 纯文本条件（StockingLevel、AbnormalInfoCategory） |
+| B. 独立 Criteria 实体 | 主实体标 `[ConditionQueryType(typeof(XxxCriteria))]` + 独立查询实体 | **查询条件含引用属性（仓库/物料/人员等下拉数据源）时必须用 B** |
+
+> **模式 A 的坑（YXC 实证）**：`[CriteriaQuery]` 主实体自查询下，`ConfigQueryView()` 里给引用属性配编辑器（如 `UseWarehouseEditor()`）**加载仓库数据源会报错**（框架原因）。涉及引用属性的条件走模式 B。
+
+**模式 B 五件套（PackingLabelAdjustCriteria / SpecialItemMarkConfigCriteria 实证）**：
+
+**① 主实体挂特性**（替换 `[CriteriaQuery]`，两者不可并存）：
+
+```csharp
+[RootEntity, Serializable]
+[ConditionQueryType(typeof(SpecialItemMarkConfigCriteria))]   // 关联查询实体
+public class SpecialItemMarkConfig : DataEntity { }
+```
+
+**② 查询实体**（领域层，与主实体同目录；`[Label]` 需 `using SIE.ObjectModel;`）：
+
+```csharp
+[QueryEntity, Serializable]
+[Label("特殊物料标识配置查询实体")]
+public class SpecialItemMarkConfigCriteria : Criteria          // 基类是 Criteria（非 DataEntity）
+{
+    // 引用属性：RefId + RefEntity 成对注册（nullable）
+    [Label("仓库")]
+    public static readonly IRefIdProperty WarehouseIdProperty =
+        P<SpecialItemMarkConfigCriteria>.RegisterRefId(e => e.WarehouseId, ReferenceType.Normal);
+    public double? WarehouseId
+    {
+        get { return (double?)GetRefNullableId(WarehouseIdProperty); }
+        set { SetRefNullableId(WarehouseIdProperty, value); }
+    }
+    public static readonly RefEntityProperty<Warehouse> WarehouseProperty =
+        P<SpecialItemMarkConfigCriteria>.RegisterRef(e => e.Warehouse, WarehouseIdProperty);
+
+    /// <summary>重写此方法实现查询</summary>
+    protected override EntityList Fetch()
+    {
+        return RT.Service.Resolve<SpecialItemMarkController>().GetSpecialItemMarkConfigQueryDatas(this);
+    }
+}
+```
+
+**③ Controller 查询**（Criteria → Where 逐条件映射）：
+
+```csharp
+public virtual EntityList<SpecialItemMarkConfig> GetSpecialItemMarkConfigQueryDatas(SpecialItemMarkConfigCriteria criteria)
+{
+    var query = Query<SpecialItemMarkConfig>();
+    if (criteria.WarehouseId.HasValue)
+        query.Where(p => p.WarehouseId == criteria.WarehouseId.Value);
+    query.OrderBy(criteria.OrderInfoList);
+    return query.ToList(criteria.PagingInfo, new EagerLoadOptions().LoadWithViewProperty());
+}
+```
+
+**④ CriteriaViewConfig**（Web 层）：
+
+```csharp
+internal class SpecialItemMarkConfigCriteriaViewConfig : WebViewConfig<SpecialItemMarkConfigCriteria>
+{
+    protected override void ConfigView()
+    {
+        using (View.OrderProperties())
+        {
+            // ConfigView() 不在框架自动显示清单内（仅 ConfigListView/ConfigDetailsView 自动），
+            // 属性必须显式 .Show()，否则查询区不出现该条件
+            View.Property(p => p.WarehouseId).UseWarehouseEditor().Show();
+        }
+    }
+}
+```
+
+**⑤ csproj**：SDK-style 项目自动包含新 `.cs`，无需手工声明（仅 `.js` 需要，见 07 §五）。
 
 ## 六、ChildrenProperty 强关联子表规范
 
@@ -234,3 +314,43 @@ View.AttachChildrenProperty(typeof(AgvMaintenanceAbnormal), o =>
 
 - 后端：`View.Property(p => p.Name).DefaultValue("Test")`；枚举 `.DefaultValue((int)ItemType.Product)`；日期 `.DefaultValue(DateTime.Today).UseDateEditor()`；引用属性 `.DefaultValue(RT.Service.Resolve<XxxController>().GetXxx())`
 - 前端：`entity.set('属性名', value)`；**引用属性需同时设 id 和 `_Display` 显示名**
+
+## 十一、无独立菜单的配置实体（主档列表按钮快捷入口）
+
+适用：低频维护的配置/规则（如备货等级管理），不占功能菜单树。
+
+三件套（StockingLevel / SpecialItemMarkConfig 实证）：
+
+**1. 入口 JS 命令**（纯前端，无 cs）：
+
+```javascript
+SIE.defineCommand('SIE.Web.WMS.Common.Commands.SpecialItemMarkConfigCommand', {
+    meta: { text: "特殊物料标识配置", group: "config", iconCls: "icon-DistributeObjectsHorizontal icon-blue" },
+    execute: function (listView, source) {
+        CRT.Workbench.addPage({
+            title: '特殊物料标识配置'.t(),
+            entityType: 'SIE.WMS.Common.SpecialItemMarkConfig',   // 实体全名（命名空间.类名）
+            module: listView.module,
+            ignoreQuery: false,
+            isAggt: true   // 聚合页（列表+详情一体）
+        });
+    }
+});
+```
+
+**2. 主档 ViewConfig 挂载**（字符串全名，跨模块无编译依赖；js 以 EmbeddedResource 随 DLL 分发，见 07 §五 csproj 红线）：
+
+```csharp
+// ItemViewConfig.ConfigListView
+View.UseCommand("SIE.Web.Items.Items.Commands.StockingLevelCommand");          // 备货等级（同模式先例）
+View.UseCommand("SIE.Web.WMS.Common.Commands.SpecialItemMarkConfigCommand");
+```
+
+**3. 权限挂载**（无菜单则无功能权限节点，挂到宿主实体）：
+
+```csharp
+// 配置实体 ViewConfig.ConfigView
+this.View.AssignAuthorize<SpecialItemMarkConfig>(typeof(Item));   // 权限跟随物料功能
+```
+
+> 注意：该模式**不要**再在 Module.cs 注册 `WebModuleMeta`，否则菜单+按钮双入口。

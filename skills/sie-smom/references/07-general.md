@@ -102,6 +102,9 @@ public class ItemController : DomainController
 - **ViewModel 分页失效**：界面查询方法自己做数据转换时，返回对象需 `SetTotalCount` 设置总数，否则分页失效。
 - **报表 / Echart 返回类型**：返回数据用 `List`，**不要返回 `EntityList`**（框架对 `EntityList` 返回做了特殊处理）。
 - **新增文件未更新 .csproj**：所有新增文件（`.cs`、`.js`、`.aspx` 等）必须同步更新对应项目的 `.csproj` 文件。JS 文件需同时配置 `<None Remove>` 和 `<EmbeddedResource Include>`，否则运行时报 `No such Entity / No such class`。这是最常见的遗漏问题，代码生成后必须确认 VS 能索引到新增文件。
+- **L10N 扩展方法在 `System` 命名空间**：`.L10N()` / `.L10nFormat()` 的扩展类声明在 `System` 命名空间。自定义文件（如校验规则）即使其余 using 与框架示例一致，只要缺平文的 `using System;`（`using System.ComponentModel;` 等替代不了）就报 CS1061，报错行看起来毫无关联。
+- **`RuleArgs` 在 `SIE.MetaModel` 命名空间**：自写 `EntityRule<T>` / `NotDuplicateRule<T>` 的 `Validate(IEntity, RuleArgs)` 报 CS0246 / CS0534 时，先补 `using SIE.MetaModel;`（与同项目既有规则文件对照 using 最直观）。
+- **`ToList` 带 EagerLoadOptions 是第 2 参数**：`.ToList(pagingInfo, new EagerLoadOptions().LoadWith(X.ChildListProperty))`；不要按 `FirstOrDefault` 的单参数形态套用。
 
 ---
 
