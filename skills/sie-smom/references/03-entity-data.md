@@ -1,14 +1,6 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：实体属性(Property<T>)·枚举Label·Criteria·验证规则(PropertyRule·EntityRule·NotDuplicateRule·NoReferencedRule)·DAO
-
----
-
 # 实体(Entity)与数据层规范
 
 > **适用范围**:本规范适用于项目中所有 `*.cs` 文件,始终生效。
-> **内容概要**:Entity 属性注册(Property<T>)、枚举 Label、Criteria 查询实体、DateRange、验证规则(PropertyRule/EntityRule/NotDuplicateRule/NoReferencedRule)、DAO 层 BaseDao<T>。
 
 ## 一、实体属性注册
 属性使用 Property<T> 注册，必须用 #region 包裹并附带 [Label]:
@@ -308,7 +300,7 @@ public class BaseDao<T> : IDao where T : Entity
 ```csharp
 public static readonly IRefIdProperty RoleIdProperty = P<User>.RegisterRefId(e => e.RoleId, ReferenceType.Normal);
 public static readonly RefEntityProperty<Role> RoleProperty = P<User>.RegisterRef(e => e.Role, RoleIdProperty);
-public int RoleId { get => (int)GetRefId(RoleIdProperty); set => SetRefId(RoleIdProperty, value); }
+public double RoleId { get => GetRefId(RoleIdProperty); set => SetRefId(RoleIdProperty, value); }
 public Role Role { get => GetRefEntity(RoleProperty); set => SetRefEntity(RoleProperty, value); }
 ```
 
@@ -331,13 +323,13 @@ public class Item : Entity<double>
 
 ### 8.1 引用属性 setter 语义区分（Criteria vs Entity）
 
-**Criteria（查询条件，非空语义）** 用 `SetRefId`，**Entity（业务实体，可空语义）** 用 `SetRefNullableId`：
+**按业务语义选择 setter**：引用值**必有值**用 `GetRefId/SetRefId`；**可空语义**（业务实体可能未关联，或 Criteria 的可选过滤条件）用 `GetRefNullableId/SetRefNullableId`（Criteria 可空引用的实证写法见 `04-web-viewconfig.md` 第五节模式 B）：
 
 ```csharp
-// Criteria 中（查询条件必有值）
+// 必有值语义（实体必填引用或 Criteria 必选条件）
 set { SetRefId(ShopIdProperty, value); }
 
-// Entity 中（可能未关联，可空）
+// 可空语义（实体可能未关联，或 Criteria 可选过滤条件）
 set { SetRefNullableId(ResourceIdProperty, value); }
 ```
 

@@ -1,10 +1,3 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：MSSQL查询规范·C#实体->SQL类型映射·JOIN·枚举·分页·避坑
-
----
-
 # MSSQL 查询规范（基于实体映射）
 
 ## 一、C# 实体与 SQL Server 表结构映射关系
@@ -17,12 +10,12 @@
 // C# 基类（框架提供）
 public class DataEntity
 {
-    public long Id { get; set; }                     // → [ID] FLOAT NOT NULL
-    public long SyncId { get; set; }                 // → [SYNC_ID] FLOAT NOT NULL
-    public long? CreateBy { get; set; }              // → [CREATE_BY] FLOAT NULL
-    public DateTime? CreateDate { get; set; }        // → [CREATE_DATE] DATETIME NULL
-    public long? UpdateBy { get; set; }              // → [UPDATE_BY] FLOAT NULL
-    public DateTime? UpdateDate { get; set; }        // → [UPDATE_DATE] DATETIME NULL
+    public double Id { get; set; }                   // → [ID] FLOAT NOT NULL
+    public double SyncId { get; set; }               // → [SYNC_ID] FLOAT NOT NULL
+    public double? CreateBy { get; set; }            // → [CREATE_BY] FLOAT NULL
+    public DateTime CreateDate { get; set; }         // → [CREATE_DATE] DATETIME NOT NULL
+    public double? UpdateBy { get; set; }            // → [UPDATE_BY] FLOAT NULL
+    public DateTime UpdateDate { get; set; }         // → [UPDATE_DATE] DATETIME NOT NULL
     public int? InvOrgId { get; set; }               // → [INV_ORG_ID] INT NULL
     public bool IsPhantom { get; set; }              // → [IS_PHANTOM] BIT NOT NULL DEFAULT 0
 }
@@ -30,12 +23,12 @@ public class DataEntity
 
 ```sql
 -- 查询时必须理解的默认字段映射
-SELECT B.[ID],              -- long → FLOAT NOT NULL
-       B.[SYNC_ID],          -- long → FLOAT NOT NULL
-       B.[CREATE_BY],        -- long? → FLOAT NULL
-       B.[CREATE_DATE],      -- DateTime? → DATETIME NULL
-       B.[UPDATE_BY],        -- long? → FLOAT NULL
-       B.[UPDATE_DATE],      -- DateTime? → DATETIME NULL
+SELECT B.[ID],              -- double → FLOAT NOT NULL
+       B.[SYNC_ID],          -- double → FLOAT NOT NULL
+       B.[CREATE_BY],        -- double? → FLOAT NULL
+       B.[CREATE_DATE],      -- DateTime → DATETIME NOT NULL
+       B.[UPDATE_BY],        -- double? → FLOAT NULL
+       B.[UPDATE_DATE],      -- DateTime → DATETIME NOT NULL
        B.[INV_ORG_ID],       -- int? → INT NULL
        B.[IS_PHANTOM]        -- bool → BIT NOT NULL DEFAULT 0
 FROM [dbo].[EXAMPLE_BILL] B;
@@ -47,9 +40,9 @@ FROM [dbo].[EXAMPLE_BILL] B;
 
 | C# 类型 | SQL Server 类型 | 查询注意事项 |
 |---------|-----------------|-------------|
-| `long` / `long?` | `FLOAT` | 近似浮点，等值比较谨慎；主键用序列生成 |
+| `double` / `double?` | `FLOAT` | Id 类（主键/外键，整数语义），等值比较谨慎；主键用序列生成 |
 | `int` / `int?` / `enum` | `INT` | 精确整数，直接等值匹配 |
-| `float` / `double` | `FLOAT` | 同为近似浮点，避免等值比较 |
+| `float` | `FLOAT` | 业务浮点，避免等值比较 |
 | `decimal` | `DECIMAL(18,6)` | 精确数值，保留 6 位小数 |
 | `bool` | `BIT` | 值为 0 或 1 |
 | `DateTime` / `DateTime?` | `DATETIME` | 精度约 3.33 毫秒 |
@@ -79,12 +72,12 @@ FROM [dbo].[EXAMPLE_BILL] B;
 
 ## 二、查询中的类型匹配规范
 
-### 2.1 FLOAT 对应 long / long? —— 注意浮点
+### 2.1 FLOAT 对应 double / double?（Id 类）—— 注意浮点
 
 ```csharp
 // C# 实体
-public long Id { get; set; }           // → [ID] FLOAT NOT NULL
-public long? UpdateBy { get; set; }    // → [UPDATE_BY] FLOAT NULL
+public double Id { get; set; }         // → [ID] FLOAT NOT NULL
+public double? UpdateBy { get; set; }  // → [UPDATE_BY] FLOAT NULL
 ```
 
 ```sql
@@ -161,7 +154,7 @@ FROM [dbo].[EXAMPLE_BILL];
 ```csharp
 // C# 实体
 public DateTime CreateDate { get; set; }       // → [CREATE_DATE] DATETIME NOT NULL
-public DateTime? UpdateDate { get; set; }      // → [UPDATE_DATE] DATETIME NULL
+public DateTime UpdateDate { get; set; }       // → [UPDATE_DATE] DATETIME NOT NULL
 public DateTime? BillDate { get; set; }         // → [BILL_DATE] DATETIME NULL
 ```
 
@@ -172,10 +165,10 @@ FROM [dbo].[EXAMPLE_BILL]
 WHERE [CREATE_DATE] >= '2024-06-01 00:00:00'
   AND [CREATE_DATE] < '2024-07-01 00:00:00';
 
--- ✅ 可空的 UpdateDate
-SELECT [ID], [NO], [UPDATE_DATE]
+-- ✅ 可空的 BillDate
+SELECT [ID], [NO], [BILL_DATE]
 FROM [dbo].[EXAMPLE_BILL]
-WHERE [UPDATE_DATE] IS NOT NULL;
+WHERE [BILL_DATE] IS NOT NULL;
 
 -- ✅ 精确到日的查询（半开区间）
 SELECT [ID], [NO], [BILL_DATE]
@@ -271,8 +264,8 @@ bill.UpdateDate = DateTime.Now;
 -- 对应的 SQL
 UPDATE [dbo].[EXAMPLE_BILL]
 SET [IS_PHANTOM] = 1,              -- bool → BIT = 1
-    [UPDATE_BY] = 1001,            -- long? → FLOAT
-    [UPDATE_DATE] = GETDATE()      -- DateTime? → DATETIME
+    [UPDATE_BY] = 1001,            -- double? → FLOAT
+    [UPDATE_DATE] = GETDATE()      -- DateTime → DATETIME
 WHERE [ID] = 100001;
 ```
 
@@ -450,15 +443,7 @@ INSERT INTO [dbo].[EXAMPLE_BILL] (
 
 > **序列语法**：SQL Server 使用 `NEXT VALUE FOR [schema].[sequence_name]`，与 Oracle 的 `SEQ_NAME.NEXTVAL` 不同。
 
-### 7.2 DECIMAL 类型 INSERT
-
-```sql
--- SQL Server 自动补齐小数位
-INSERT INTO [dbo].[EXAMPLE_BILL] ([ID], [SYNC_ID], ... [AMOUNT] ...)
-VALUES (NEXT VALUE FOR [dbo].[SEQ_EXAMPLE_BILL_ID],
-        NEXT VALUE FOR [dbo].[SEQ_EXAMPLE_BILL_SYNC_ID],
-        ... 1000 ...);
-```
+> 数值列 INSERT 时可省略小数位，SQL Server 自动补齐（如 `DECIMAL(18,6)` 列直接写 `1000`）。
 
 ---
 
@@ -468,17 +453,17 @@ VALUES (NEXT VALUE FOR [dbo].[SEQ_EXAMPLE_BILL_ID],
 
 | C# 表达式 | SQL 条件 | 说明 |
 |-----------|----------|------|
-| `x.Id == 100001` | `[ID] = 100001` | `long` → `FLOAT` |
+| `x.Id == 100001` | `[ID] = 100001` | `double` → `FLOAT` |
 | `x.Status == BillStatus.Approved` | `[STATUS] = 1` | `enum` → `INT` |
 | `x.Status >= BillStatus.Approved` | `[STATUS] >= 1` | 枚举比较 → 数字比较 |
 | `x.Amount > 0` | `[AMOUNT] > 0` | `decimal` → `DECIMAL(18,6)` |
 | `x.IsPhantom == false` | `[IS_PHANTOM] = 0` | `bool` → `BIT` |
 | `x.IsPhantom == true` | `[IS_PHANTOM] = 1` | `bool` → `BIT` |
-| `x.CreateDate >= startDate` | `[CREATE_DATE] >= '2024-01-01 00:00:00'` | `DateTime?` → `DATETIME` |
+| `x.CreateDate >= startDate` | `[CREATE_DATE] >= '2024-01-01 00:00:00'` | `DateTime` → `DATETIME` |
 | `x.WorkOrder == null` | `[WORK_ORDER_ID] IS NULL` | `IRefIdProperty` 是否引用 |
 | `x.No.Contains("2024")` | `[NO] LIKE N'%2024%'` | `string` → `NVARCHAR`，注意 `N` 前缀 |
 | `x.No.StartsWith("BILL")` | `[NO] LIKE N'BILL%'` | `string` → `NVARCHAR` |
-| `ids.Contains(x.Id)` | `[ID] IN (...)` | `long` 集合 → `FLOAT` 列表 |
+| `ids.Contains(x.Id)` | `[ID] IN (...)` | `double` 集合 → `FLOAT` 列表 |
 
 ### 8.2 排序映射
 
@@ -492,20 +477,22 @@ VALUES (NEXT VALUE FOR [dbo].[SEQ_EXAMPLE_BILL_ID],
 
 | C# 实体字段 | SQL 列 | 类型映射 |
 |------------|--------|---------|
-| `Id` | `[ID]` | `long` → `FLOAT` |
-| `SyncId` | `[SYNC_ID]` | `long` → `FLOAT` |
+| `Id` | `[ID]` | `double` → `FLOAT` |
+| `SyncId` | `[SYNC_ID]` | `double` → `FLOAT` |
 | `No` | `[NO]` | `string` → `NVARCHAR(80)` |
 | `Status` | `[STATUS]` | `enum` → `INT` |
 | `Amount` | `[AMOUNT]` | `decimal` → `DECIMAL(18,6)` |
 | `BillDate` | `[BILL_DATE]` | `DateTime?` → `DATETIME NULL` |
 | `IsPhantom` | `[IS_PHANTOM]` | `bool` → `BIT` |
 | `WorkOrder` | `[WORK_ORDER_ID]` | `IRefIdProperty` → `FLOAT` |
-| `CreateDate` | `[CREATE_DATE]` | `DateTime?` → `DATETIME NULL` |
-| `UpdateBy` | `[UPDATE_BY]` | `long?` → `FLOAT NULL` |
+| `CreateDate` | `[CREATE_DATE]` | `DateTime` → `DATETIME NOT NULL` |
+| `UpdateBy` | `[UPDATE_BY]` | `double?` → `FLOAT NULL` |
 
 ---
 
 ## 九、常见查询场景（实体到 SQL 完整示例）
+
+> 注：本节 C# 片段为 LINQ 语义示意（小写 `db` 为示例变量名），实际框架写法用 `DB.Query<T>()` + `ToList(pagingInfo)`，见 `05-controller.md`。
 
 ### 9.1 根据单号查询
 
@@ -650,8 +637,8 @@ db.Update(bill);
 UPDATE [dbo].[EXAMPLE_BILL]
 SET [STATUS] = 1,                    -- enum → INT
     [AMOUNT] = 1000,                 -- decimal → DECIMAL(18,6)
-    [UPDATE_BY] = 1001,              -- long? → FLOAT
-    [UPDATE_DATE] = GETDATE()        -- DateTime? → DATETIME
+    [UPDATE_BY] = 1001,              -- double? → FLOAT
+    [UPDATE_DATE] = GETDATE()        -- DateTime → DATETIME
 WHERE [ID] = 100001
   AND [IS_PHANTOM] = 0;
 
@@ -711,14 +698,14 @@ SELECT [ID], [NO] FROM [dbo].[EXAMPLE_BILL] WHERE [STATUS] = 1;
 ### 10.4 DateTime 可空字段判断
 
 ```sql
--- ❌ 错误：UpdateDate 是 DateTime?，不能直接用等值判断
-SELECT [ID], [NO] FROM [dbo].[EXAMPLE_BILL] WHERE [UPDATE_DATE] = NULL;
+-- ❌ 错误：BillDate 是 DateTime?，不能直接用等值判断
+SELECT [ID], [NO] FROM [dbo].[EXAMPLE_BILL] WHERE [BILL_DATE] = NULL;
 
 -- ✅ 正确：NULL 判断使用 IS NULL
-SELECT [ID], [NO] FROM [dbo].[EXAMPLE_BILL] WHERE [UPDATE_DATE] IS NULL;
+SELECT [ID], [NO] FROM [dbo].[EXAMPLE_BILL] WHERE [BILL_DATE] IS NULL;
 
--- ✅ 正确：判断是否有过更新（C#: x.UpdateDate != null）
-SELECT [ID], [NO] FROM [dbo].[EXAMPLE_BILL] WHERE [UPDATE_DATE] IS NOT NULL;
+-- ✅ 正确：判断是否已填值（C#: x.BillDate != null）
+SELECT [ID], [NO] FROM [dbo].[EXAMPLE_BILL] WHERE [BILL_DATE] IS NOT NULL;
 ```
 
 ### 10.5 NVARCHAR 缺少 N 前缀
@@ -734,7 +721,7 @@ SELECT [ID], [NO] FROM [dbo].[EXAMPLE_BILL] WHERE [NO] = N'BILL20240001';
 ### 10.6 标识符方括号
 
 ```sql
--- ❌ 错误：NO 是 SQL Server 保留字，不加方括号可能导致歧义
+-- ❌ 不规范：NO 属 ODBC 保留字/SQL Server 未来关键字，不加方括号有歧义风险
 SELECT ID, NO FROM EXAMPLE_BILL;
 
 -- ✅ 正确：始终使用方括号包裹标识符

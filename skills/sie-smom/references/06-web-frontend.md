@@ -1,14 +1,6 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：DataQueryer分层·ExtJS Layout·Controller·通用工具·JS嵌入资源·禁止前端直访DB
-
----
-
 # Web 前端规范
 
 > **适用范围**:本规范适用于项目中所有 `*.cs`、`*.js` 文件,始终生效。
-> **内容概要**:DataQueryer 分层封装、ExtJS Layout/Controller、通用工具方法、Web Command、JS 嵌入资源规范、Web Behavior、禁止前端直访数据库。
 
 ## 一、DataQueryer 数据查询规范
 
@@ -129,8 +121,6 @@ public class SaveXxxCommand : FormSaveCommand
 
 **注意事项：**
 - 禁止将 JS 文件设置为 `Content` 或 `None`
-- 嵌入资源确保 JS 文件编译进程序集，部署时不会遗漏
-- 新增 JS 文件时无需手动修改 csproj，通配符会自动包含
 
 **⚠️ 强制规则：AI 助手每创建一个 JS 文件，必须同步在 .csproj 中完成以下两处配置，缺一不可：**
 
@@ -199,7 +189,6 @@ public class XxxViewConfig : WebViewConfig<XxxEntity>
 **说明：**
 - 前端（ViewConfig、Command、Behavior、DataQueryer）必须通过 `RT.Service.Resolve<XxxController>()` 调用后端控制器获取数据
 - 数据访问逻辑必须封装在领域层（SIE.{Module}）的 Controller 中
-- 这样确保数据访问的统一性、安全性和可维护性
 
 ---
 

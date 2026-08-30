@@ -1,10 +1,3 @@
-> **类型**：配方库（蒸馏自 SMOM 开发手册 /WPFDev/ 全部 6 分组 28 页，2026-08-17 版本）
-> **来源**：http://10.10.51.213:30687/WPFDev/
-> **优先级**：高。写 WPF 端（命令/行为/编辑器/控件/工具）时先读本文件照搬模式。
-> **覆盖范围**：弹窗录入命令·ViewBehavior 常用行为(变色/勾选/双击/子页签/放大/序号宽/自动列宽/输入法)·7个客制化编辑器·点位选择/按钮换位/PDF打印/进度框·4个通用控件·4个通用工具(动画/打印/等待框/消息框)
-
----
-
 # WPF 端配方库
 
 ## 配方索引
@@ -223,7 +216,7 @@ View.UseAutoColumnSizeExcept(Item.NameProperty.Name);                // 例外�
 `TypeWritingBehavior(List<IManagedProperty>)`：DetailView 的目标编辑器 `GotKeyboardFocus` 切英文输入法、`LostKeyboardFocus` 切回中文。底层 `BanInputMethod` 用 Win32 API：
 
 ```csharp
-[DllImport("user32.dll")] static extern bool PostMessage(int hhwnd, uint msg, IntPtr wparam, IntPtr lparam);
+[DllImport("user32.dll")] static extern bool PostMessage(IntPtr hhwnd, uint msg, IntPtr wparam, IntPtr lparam);
 [DllImport("user32.dll")] static extern IntPtr LoadKeyboardLayout(string pwszKLID, uint Flags);
 // ChangeUSLanguage: PostMessage(0xffff, 0x0050, IntPtr.Zero, LoadKeyboardLayout("00000409", 1)) 屏蔽中文（Ctrl+Shift 也切不回，Win+空格可切）
 // ChangeZHLanguage: 同上但 "00000804"
@@ -402,8 +395,8 @@ NuGet：`PdfiumViewer` + `PdfiumViewer.Native.x86.v8-xfa` + `PdfiumViewer.Native
 ```bat
 if not exist "$(TargetDir)Lib\x64" md "$(TargetDir)Lib\x64"
 if not exist "$(TargetDir)Lib\x86" md "$(TargetDir)Lib\x86"
-move /-y "$(TargetDir)x64\pdfium.dll" "$(TargetDir)Lib\x64\"
-move /-y "$(TargetDir)x86\pdfium.dll" "$(TargetDir)Lib\x86\"
+move /Y "$(TargetDir)x64\pdfium.dll" "$(TargetDir)Lib\x64\"
+move /Y "$(TargetDir)x86\pdfium.dll" "$(TargetDir)Lib\x86\"
 ```
 
 ```csharp
@@ -428,8 +421,6 @@ _waitDialog.ShowDialog();
 // 线程中更新进度（0-100）：
 _waitDialog.Dispatcher.Invoke(() => _waitDialog.ProgressValue = new ProgressValue { Percent = percent });
 ```
-
-（修改导航界面/修改登录界面两页手册暂无代码内容，仅有效果图。）
 
 ---
 

@@ -1,14 +1,6 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：Algorithm注册·L10N国际化(.L10N·.L10nFormat·.t)·XML注释·框架API速查表
-
----
-
 # 通用规范
 
 > **适用范围**:本规范适用于项目中所有 `*.cs`、`*.js`、`*.ts` 文件,始终生效。
-> **内容概要**:[Algorithm] 算法注册、L10N 国际化(.L10N()/.L10nFormat()/.t())、XML 文档注释、框架 API 速查表。
 
 ## 一、Algorithm 算法规范
 使用 [Algorithm] 特性注册:
@@ -173,7 +165,7 @@ public class XxxEntity : DataEntity { ... }
 ```
 
 - `AuthIdProperty`：实体上做权限过滤的属性（部门/员工等）
-- `AuthType`：授权实体类（如 `EmployeeAuth`，可带 `[EmployeeAuth]\` 特性指定 `EmployeeIdProperty`）
+- `AuthType`：授权实体类（如 `EmployeeAuth`，可带 `[EmployeeAuth]` 特性指定 `EmployeeIdProperty`）
 - `Nullable = true`：字段为空时放行（生成 `OR 字段 IS NULL OR EXISTS(...)`），否则强制 EXISTS
 - 启用：模块初始化调用 `DataAuthInterceptor.Intercept()`（订阅 `RepositoryDataProvider.Querying`）
 

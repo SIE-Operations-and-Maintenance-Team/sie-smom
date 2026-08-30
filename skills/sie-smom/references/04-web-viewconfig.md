@@ -1,14 +1,6 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：WebViewConfig·常用方法·AttachChildrenProperty分页·非重写视图属性显示
-
----
-
 # ViewConfig 视图配置规范
 
 > **适用范围**:本规范适用于项目中所有 `*.cs` 文件,始终生效。
-> **内容概要**:Web ViewConfig、常用 ViewConfig 方法速查、AttachChildrenProperty 分页规范、非重写视图方法属性显示规范。
 
 ## 一、Web ViewConfig
 继承 WebViewConfig<T>:
@@ -240,7 +232,7 @@ internal class SpecialItemMarkConfigCriteriaViewConfig : WebViewConfig<SpecialIt
 }
 ```
 
-**⑤ csproj**：SDK-style 项目自动包含新 `.cs`，无需手工声明（仅 `.js` 需要，见 07 §五）。
+**⑤ csproj**：新增文件必须同步更新项目 `.csproj`（红线 5）；`.js` 还须同时配置 `EmbeddedResource` + `None Remove`（见 07 §五）。
 
 ## 六、ChildrenProperty 强关联子表规范
 
@@ -307,7 +299,7 @@ View.AttachChildrenProperty(typeof(AgvMaintenanceAbnormal), o =>
 ## 九、JS 常用 API 速查
 
 - **消息**：`SIE.Msg.showMessage / showError / showWarning / askQuestion / confirm / wait / hide / close / showToast`
-- **视图方法**：`view.getParent() / getChildren() / getCurrent() / refreshData([id]) / loadChildData([true]) / syncCmdState() / getControl() / getMeta() / getData() / setData() / getToken() / findCmd() / findChild("全命名空间")`
+- **视图方法**：`view.getParent() / getChildren() / getCurrent() / refreshData([id]) / loadChildData([true]) / syncCmdState([view, recursion]) / getControl() / getMeta() / getData() / setData() / getToken() / findCmd() / findChild("全命名空间")`
 - **其他**：`entity.markSaved()` / `CRT.Workbench.closeCurrentTab()` / `CRT.Context.GlobalContext.getContext('userInfo')` 登录人 / `CRT.Context.PageContext.getParams()` addPage 参数
 
 ## 十、默认值设置

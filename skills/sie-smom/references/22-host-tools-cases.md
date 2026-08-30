@@ -1,10 +1,3 @@
-> **类型**：配方库 + 工具 API 速查（蒸馏自 SMOM 开发手册 /HostDev/工具方法/ + /HostDev/经验案例/，20 页，2026-08-17 版本；末节含底层支持/实体/控制器主题相对 01/03/05 的增量补充）
-> **来源**：http://10.10.51.213:30687/HostDev/
-> **优先级**：高。写服务端工具类调用、批量数据库操作、外部系统交互、打印/推送扩展时先读本文件。
-> **覆盖范围**：ObjectUtil·EntityUtil·DataChecker·数据容器·CommonEntityController·FileUtil·ThreadCacheUtil·HttpUtil·RedisUtil·SqlCreator·DbBulkProvider·打印增强·钉钉/邮件/企微推送·客制化WebApi·默认排序·树形递归·视图扩展实体·调度/快码/配置项/预警补充
-
----
-
 # 服务端工具方法与经验案例
 
 ## 配方索引
@@ -32,11 +25,11 @@
 from.ShallowCopy<TTo>();                    // 浅拷贝（同名属性第 1 层，引用类型赋引用）
 from.ShallowCopy<TFrom, TTo>(to);           // 浅拷贝到已有对象
 from.DeepCopy<TTo>();                       // 深拷贝（Json 序列化+反序列化）
-strs.JoinString(seperator = ",");           // 连接字符串集合
+strs.JoinString(seperator: ",");           // 连接字符串集合
 str.Nvl(emptyReplace);                      // 空串替换
 str.SubMaxString(maxLength);                // 按最大长度截取
-str.SplitToDouble(separator = ",");         // "1,2,3" → List<double>（TryParse，失败为 0）
-str.SplitToInt(separator = ",");
+str.SplitToDouble(separator: ",");         // "1,2,3" → List<double>（TryParse，失败为 0）
+str.SplitToInt(separator: ",");
 list.SortByStringNumber(p => p.No);         // 字符串数值排序（decimal.TryParse 排，就地重排 IList）
 ```
 
@@ -180,7 +173,7 @@ RedisUtil.LockBatchToDo<T>(id, keys, "行为描述", action, lockSeconds = 600);
 
 ## 九、SQL 语句构建器 SqlCreator（`SIE.HwatsingReport.Utils`，可复制的自研模式）
 
-**用法**（配合 `DbAccesserFactory.Create` + `reader.ToList<T>()`）：
+**用法**（配合 `DbAccesserFactory.Create` + `reader.ToList<T>()`；示例 SQL 以 MSSQL 语法为例）：
 
 ```csharp
 using (var dba = DbAccesserFactory.Create(HwatsingReportEntityDataProvider.ConnectionStringName))
@@ -228,7 +221,7 @@ DbBulkProvider.Save<TEntity, TKey>(entityList);                // 删+增+改（
 // 全部自动：SetEntityId、填 CreateBy/UpdateBy/CreateDate/UpdateDate/InvOrgId、事务包裹、完成后置 Unchanged
 ```
 
-**实现**：SqlServer 用 SqlBulkCopy（BatchSize=10000）+ 临时表 + MERGE 更新（受影响数与预期不符抛异常）；Oracle 用 ODP ArrayBindCount 数组绑定（分块 10000，**未验证**）。更新默认排除 ID/IS_LOCKED/IS_PHANTOM/CREATE_BY/CREATE_DATE 列。
+**实现**：SqlServer 用 SqlBulkCopy（BatchSize=10000）+ 临时表 + MERGE 更新（受影响数与预期不符抛异常）；Oracle 用 ODP ArrayBindCount 数组绑定（分块 10000，**未验证**）。更新默认排除 ID/IS_LOCKED/IS_PHANTOM/CREATE_BY/CREATE_DATE 列（`IS_LOCKED` 为框架锁列，非 DataEntity 默认 8 列）。
 
 ---
 

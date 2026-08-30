@@ -1,8 +1,4 @@
-> **类型**：配方库（蒸馏自 SMOM 开发手册 /WebDev/Web命令/，2026-08-17 版本）
-> **来源**：http://10.10.51.213:30687/WebDev/Web命令/
-> **优先级**：高。写导入/导出命令时先读本文件照搬模式。
-> **覆盖范围**：多表聚合导出（主从 JOIN 展开）·通用导入（简单/复杂 IBusinessImport）·自定义模板导入·子表导入·框架通用导入增强·列表导出（ExporterSlim）·列表导入（填界面不落库）
-> **拆分说明**：原 `18-web-commands.md`（61K，23 篇配方）按任务域拆为 4 份：表单/列表保存提交 → `18-web-commands-form.md`；导入导出 → `18-web-commands-import-export.md`；添加/选择/弹窗查看 → `18-web-commands-add-lookup.md`；打印/附件/查找 → `18-web-commands-print-attach.md`。节号保留原手册序号（一~二十），便于溯源。
+> **拆分说明**：原 `18-web-commands.md` 按任务域拆为 4 份；节号保留原手册序号（一~二十二），跨文件不连续属正常。
 
 ---
 
@@ -26,7 +22,7 @@
 
 **场景**：主从（1:N）实体导出 Excel，主表字段在子表行展开（类 SQL JOIN）。基类 `BaseExportCommand<T1, T2, T3, T4>`（自研，位于 `SIE.Web.Core.Common.Commands`）。
 
-**泛型**：T1 主表、T2 子表、T3/T4 预留（不用传 `object`）。需重写 3 个成员：`Name`（文件名）、`InitColumnDefs()`、`CreateExcelData(double[] ids)`。
+**泛型**：T1 主表、T2 子表、T3/T4 预留（传 `object` 即可）。需重写 3 个成员：`Name`（文件名）、`InitColumnDefs()`、`CreateExcelData(double[] ids)`。
 
 **命令 cs**：
 
@@ -198,6 +194,7 @@ public class ImportXxxHandle : IDisposable, IBusinessImport
             try
             {
                 // 读取列：row.Field<string>(ColIndex("列名"))?.Trim()
+                // newEntity 为按行解析构建的待保存实体（构建过程省略）
                 RF.Save(newEntity);
             }
             catch (Exception ex)
@@ -308,7 +305,7 @@ SIE.defineCommand('SIE.Web.XXX.Commands.ImportXxxCommand', {
             Ext.MessageBox.alert("提示", "文件不能大于".t() + me.limitFileSize + "M".t());
             return false;
         }
-        var fileReader = new FileReader('file://' + newValue);
+        var fileReader = new FileReader();
         fileReader.readAsDataURL(file);
         fileReader.onload = function (e) {
             Ext.MessageBox.show({ msg: '导入数据中, 请稍等...'.t(), progressText: '导入中...'.t(), width: 300, closable: false });
@@ -351,6 +348,7 @@ public class ImportExcelExtCommand : SIE.Web.Common.Import.Commands.ImportExcelC
 {
     protected override object ImportData(ImportViewArgs importViewArgs)
     {
+        // importResult / ImportType / ImportView 来自基类成员或外部初始化，此处省略
         Tuple<FileType, byte[]> tuple = FileStreamHelper.Base64ToExcel(importViewArgs.Data);
         MemoryStream memoryStream = new MemoryStream();
         memoryStream.Write(tuple.Item2);
@@ -376,7 +374,7 @@ internal class ExportMoldChangeTaskCommand : ViewCommand<List<MoldChangeTask>>
     {
         if (args.Count == 0) throw new ValidationException("没有可导出的数据");
 
-        var exporterBuilder = new ExporterSlimBuilder<MoldChangeTaskExportViewModel>();
+        var exporterBuilder = new ExporterSlimBuilder<MoldChangeTask>();
         var name = "转模单".L10N();
         exporterBuilder.FileName = name;               // 输出：{name}.xlsx
         exporterBuilder.ExcelContentTitle = name;      // Excel 内合并单元格大标题（可选）

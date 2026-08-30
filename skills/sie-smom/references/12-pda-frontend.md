@@ -1,11 +1,6 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **优先级**：高。
-> **覆盖范围**：Vue2 语法限制·API 接口模板·调用处模板·Storage 工具·Prettier 风格
-
 # PDA 前端（Vue2）编码规范
 
 > **适用范围**:本规范适用于所有基于 Vue 2.5.x + Vux + axios 的 PDA 项目,始终生效。
-> **内容概要**:Vue2 语法限制（禁止可选链）、API 接口实现模板、调用处模板、Prettier 代码风格。
 
 ## 一、Vue2 语法限制
 
@@ -41,41 +36,41 @@ const list = data && data.Items || [];
 import Vue from 'vue';
 import Storage from '@/assets/js/storage.js'
 export default function (code) {
-    return Vue.axios.post(Storage.url(), {
-        "ApiType": "TaskManagerPDAController",
-        "Parameters": [
-            {
-                "Value": code
-            }
-        ],
-        "Method": "GetRecommendLocation",
-        "Context": {
-            "Ticket": Storage.ticket(),
-            "InvOrgId": Storage.orgid()
-        }
-    }).then(res => {
-        const data = res.data;
-        if (data.Success) {
-            if (data.Context.Ticket) {
-                Storage.refreshTicket(data.Context.Ticket);
-            }
-            return data.Result;
-        } else {
-            // 抛出一个特殊的错误对象，用于区分业务错误和网络错误
-            const businessError = new Error(data.Message);
-            businessError.isBusinessError = true;
-            throw businessError;
-        }
-    }).catch(err => {
-        // 区分业务逻辑错误和网络连接错误
-        if (err.isBusinessError) {
-            // 业务逻辑错误已经在上面处理过了，这里只需要重新抛出
-            return Promise.reject(err);
-        } else {
-            // 真正的网络错误或HTTP状态码错误
-            return Promise.reject(new Error("连接服务器失败"));
-        }
-    });
+  return Vue.axios.post(Storage.url(), {
+    "ApiType": "TaskManagerPDAController",
+    "Parameters": [
+      {
+        "Value": code
+      }
+    ],
+    "Method": "GetRecommendLocation",
+    "Context": {
+      "Ticket": Storage.ticket(),
+      "InvOrgId": Storage.orgid()
+    }
+  }).then(res => {
+    const data = res.data;
+    if (data.Success) {
+      if (data.Context.Ticket) {
+        Storage.refreshTicket(data.Context.Ticket);
+      }
+      return data.Result;
+    } else {
+      // 抛出一个特殊的错误对象，用于区分业务错误和网络错误
+      const businessError = new Error(data.Message);
+      businessError.isBusinessError = true;
+      throw businessError;
+    }
+  }).catch(err => {
+    // 区分业务逻辑错误和网络连接错误
+    if (err.isBusinessError) {
+      // 业务逻辑错误已经在上面处理过了，这里只需要重新抛出
+      return Promise.reject(err);
+    } else {
+      // 真正的网络错误或HTTP状态码错误
+      return Promise.reject(new Error("连接服务器失败"));
+    }
+  });
 }
 ```
 
@@ -87,37 +82,37 @@ export default function (code) {
 import Vue from 'vue';
 import Storage from '@/assets/js/storage.js'
 export default function (data) {
-    return Vue.axios.post(Storage.url(), {
-        "ApiType": "CallAgvNewController",
-        "Parameters": [
-            {
-                "Value": data
-            }
-        ],
-        "Method": "SubmitCallAgv",
-        "Context": {
-            "Ticket": Storage.ticket(),
-            "InvOrgId": Storage.orgid()
-        }
-    }).then(res => {
-        const data = res.data;
-        if (data.Success) {
-            if (data.Context.Ticket) {
-                Storage.refreshTicket(data.Context.Ticket);
-            }
-            return data.Result;
-        } else {
-            const businessError = new Error(data.Message);
-            businessError.isBusinessError = true;
-            throw businessError;
-        }
-    }).catch(err => {
-        if (err.isBusinessError) {
-            return Promise.reject(err);
-        } else {
-            return Promise.reject(new Error("连接服务器失败"));
-        }
-    });
+  return Vue.axios.post(Storage.url(), {
+    "ApiType": "CallAgvNewController",
+    "Parameters": [
+      {
+        "Value": data
+      }
+    ],
+    "Method": "SubmitCallAgv",
+    "Context": {
+      "Ticket": Storage.ticket(),
+      "InvOrgId": Storage.orgid()
+    }
+  }).then(res => {
+    const data = res.data;
+    if (data.Success) {
+      if (data.Context.Ticket) {
+        Storage.refreshTicket(data.Context.Ticket);
+      }
+      return data.Result;
+    } else {
+      const businessError = new Error(data.Message);
+      businessError.isBusinessError = true;
+      throw businessError;
+    }
+  }).catch(err => {
+    if (err.isBusinessError) {
+      return Promise.reject(err);
+    } else {
+      return Promise.reject(new Error("连接服务器失败"));
+    }
+  });
 }
 ```
 
@@ -138,17 +133,17 @@ export default function (data) {
 ```javascript
 this.$vux.loading.show({ text: 'Loading' });
 try {
-    const res = await this.$axiosApi.scanStation(this.inputStationCode);
-    this.$vux.loading.hide();
-    if (res) {
-        // 处理成功结果
-    } else {
-        // 处理空结果
-    }
+  const res = await this.$axiosApi.scanStation(this.inputStationCode);
+  this.$vux.loading.hide();
+  if (res) {
+    // 处理成功结果
+  } else {
+    // 处理空结果
+  }
 } catch (err) {
-    this.$vux.loading.hide();
-    this.$MConfirm.Alert(err.message, function () {
-    })
+  this.$vux.loading.hide();
+  this.$MConfirm.Alert(err.message, function () {
+  })
 }
 ```
 
@@ -177,9 +172,9 @@ const res = await this.$axiosApi.scanStation(this.inputStationCode);
 
 // 错误：过度换行
 const res = await this
-    .$axiosApi
-    .scanStation(this
-        .inputStationCode);
+  .$axiosApi
+  .scanStation(this
+    .inputStationCode);
 ```
 
 ## 五、Storage 工具方法

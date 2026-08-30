@@ -1,10 +1,3 @@
-> **类型**：问题库（蒸馏自 SMOM 开发手册 /Problems/，14/15 页——"BS固定列悬停显示文本"页为站点死链未收录，2026-08-17 版本）
-> **来源**：http://10.10.51.213:30687/Problems/
-> **优先级**：高。排查/解决问题时先按本文件索引定位；工作流开发按第三节完整模式实施。
-> **覆盖范围**：查询效率·框架数据操作开关·工作流全流程·节点高度/基类·配置缓存·通用查询·字符串数值排序·BS弹窗子页签·Web界面/命令/样式·JS跨模块undefined
-
----
-
 # 常见问题与解决方案
 
 ## 问题索引
@@ -73,10 +66,10 @@ public abstract class QmsLockerActivityBase : PanelBlockingActivity
     protected abstract EntityList<Employee> GetHandleEmployees(ActivityExecutionContext context);   // 指定处理人生成任务
 
     // 异常处理：捕异常 → WorkflowInstance.Fault + Logger + 流转记录 → Suspend()（挂起节点，流程不崩）
-    protected virtual IActivityExecutionResult ErrorHandle(ActivityExecutionContext context, Func<IActivityExecutionResult> func);
+    protected virtual IActivityExecutionResult ErrorHandle(ActivityExecutionContext context, Func<IActivityExecutionResult> func);  // 签名示意，实现省略
 
     // 模板方法：OnExecute/OnResume/ReturnResult 全部 sealed 包 ErrorHandle，子类重写 XxxOverridable
-    protected sealed override IActivityExecutionResult OnExecute(ctx) => ErrorHandle(ctx, () => OnExecuteOverridable(ctx));
+    protected sealed override IActivityExecutionResult OnExecute(ActivityExecutionContext ctx) => ErrorHandle(ctx, () => OnExecuteOverridable(ctx));  // 签名示意
     protected virtual IActivityExecutionResult OnResumeOverridable(ActivityExecutionContext context)
     {
         ResetCurrentIngOrg(context);
@@ -86,17 +79,17 @@ public abstract class QmsLockerActivityBase : PanelBlockingActivity
     }
 
     // 生成流程任务：转办则只给转办人；否则 GetHandleEmployees + GenerateFlowTasks + 通知 + 更新单据状态
-    protected override void GenerateFlowTask(ActivityExecutionContext context);
+    protected override void GenerateFlowTask(ActivityExecutionContext context);  // 签名示意，实现省略
 
     // 流转记录：发起记录 / 审核意见（AuditModel.Opinion）/ 默认
-    protected override void SaveFlowProcessRecord(ActivityExecutionContext context);
+    protected override void SaveFlowProcessRecord(ActivityExecutionContext context);  // 签名示意，实现省略
 
     // 通知（Input 是 Variable 时跳过——发起场景不通知）
-    protected virtual async Task SendNotifyMessageAsync(context, empIds);  // GetPendingFlowTask + NotifyHandlerAsync
+    protected virtual async Task SendNotifyMessageAsync(ActivityExecutionContext context, IEnumerable<Employee> empIds);  // 签名示意，实现省略（GetPendingFlowTask + NotifyHandlerAsync）
 }
 ```
 
-### 3.3 四类节点写法
+### 3.3 五类节点写法
 
 | 节点类型 | 基类 | 要点 |
 |---|---|---|
@@ -210,7 +203,7 @@ class AsnDetailOrderConfig : EntityConfig<AsnDetailOrder>
     protected override void ConfigMeta()
     {
         Func<IQuery> view = () => DB.Query<AsnDetail>().As("T")
-            .Select(p => new { p.Id, Line_No = p.SQL<int>(new Data.FormattedSql("TO_NUMBER(T.LINE_NO) AS LINE_NO")) })
+            .Select(p => new { p.Id, Line_No = p.SQL<int>(new Data.FormattedSql("TO_NUMBER(T.LINE_NO) AS LINE_NO")) })  // TO_NUMBER 为 Oracle/PG 函数，MSSQL 用 CAST(LINE_NO AS FLOAT)
             .ToQuery();
         Meta.MapView(view).MapAllProperties();
     }
@@ -269,7 +262,7 @@ beforeCreate: function (meta, entity) {
 **页面样式**：覆盖样式文件（登录 `wwwroot/css/account/account.css`、主界面 `wwwroot/css/site.css`）或用样式注入插件；滚动条宽度纯 CSS：
 
 ```css
-::webkit-scrollbar { width: 30px; height: 30px; }
+::-webkit-scrollbar { width: 30px; height: 30px; }
 ```
 
 ## 十一、JS 跨模块导致 undefined
@@ -286,4 +279,3 @@ View.RequirModuleResource("SIE.Web.MES.WorkOrders.Scripts.WorkOrderBehavior.js")
 
 ---
 
-> 未收录说明：手册 Problems 章节"BS固定列之后，无法使用鼠标悬停显示文本内容问题"一页为站点死链（侧边栏链接 404），待手册修复后补充。

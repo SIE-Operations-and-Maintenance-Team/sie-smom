@@ -1,14 +1,6 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：WPF ViewConfig·ViewBehavior·ListViewCommand·PagingLookUpEditor·Extension·Layout
-
----
-
 # WPF 组件规范
 
 > **适用范围**:本规范适用于项目中所有 `*.cs` 文件,始终生效。
-> **内容概要**:WPFViewConfig、ViewBehavior、ListViewCommand、PagingLookUpEditor、WPF Extension 方法、ILayoutControl。
 
 ## 一、WPF ViewConfig
 继承 WPFViewConfig<T>:
@@ -67,8 +59,8 @@ public class CustomerDisableCommand : ListViewCommand
     {
         if (CRT.MessageService.AskQuestion("确定禁用选中的资料?".L10N()))
         {
-            (view.Current as Customer).State = State.Disable;
-            RF.Save(view.Current);
+            // 数据操作经 Controller（红线 1：命令内禁止直访 RF/DB），Controller 内再保存
+            RT.Service.Resolve<CustomerController>().Disable((view.Current as Customer));
         }
     }
 }

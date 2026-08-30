@@ -1,8 +1,4 @@
-> **类型**：配方库（蒸馏自 SMOM 开发手册 /WebDev/Web命令/，2026-08-17 版本）
-> **来源**：http://10.10.51.213:30687/WebDev/Web命令/
-> **优先级**：高。写打印/附件/查找命令时先读本文件照搬模式。
-> **覆盖范围**：查看附件（图片预览）·打印命令（8.0/8.3/9.0 版本差异）·列表数据查找（前端内存查找）·通用标签打印命令基类·通用单据打印命令基类
-> **拆分说明**：原 `18-web-commands.md`（61K，23 篇配方）按任务域拆为 4 份：表单/列表保存提交 → `18-web-commands-form.md`；导入导出 → `18-web-commands-import-export.md`；添加/选择/弹窗查看 → `18-web-commands-add-lookup.md`；打印/附件/查找 → `18-web-commands-print-attach.md`。节号保留原手册序号（一~二十），便于溯源。
+> **拆分说明**：原 `18-web-commands.md` 按任务域拆为 4 份；节号保留原手册序号（一~二十二），跨文件不连续属正常。
 
 ---
 
@@ -84,7 +80,7 @@ showImage: function (url, title) {
 
 ## 五、Web打印命令
 
-**场景**：后端生成打印数据（见 `22-host-tools-cases.md` 打印节），前端按版本打开预览/打印。
+**场景**：后端生成打印数据（见 `22-host-tools-cases.md` 11.1 打印增强），前端按版本打开预览/打印。
 
 **版本差异**（前端打开方式）：
 
@@ -142,7 +138,7 @@ public class MaterialReturnApplyPrintCommand : ViewCommand<MaterialReturnApply[]
         var ids = args.Select(p => p.Id).ToList();
         var datas = RT.Service.Resolve<CommonEntityController>().GetEntityListById<MaterialReturnApply>(ids, null);
         var printData = reportByExtension.PrintProcess(printable, template.Id, template.Content, () => {
-            RT.Service.Resolve<MaterialReturnApplyController>().UpdatePrintQty(ids.ToList());
+            RT.Service.Resolve<MaterialReturnApplyController>().UpdatePrintQty(ids);
             return datas;
         }, 1);
         return new { Data = printData, Type = template.Type };
@@ -251,6 +247,7 @@ SIE.defineCommand('SIE.Web.Core.Common.Commands.SearchRowCommand', {
 public class BaseLabelPrintCommandViewArgs : ViewArgs
 {
     public bool IsPrint { get; set; }   // false=取模板列表，true=执行打印
+    // 其余参数（Data / Type / SelectedIds 等）继承自 ViewArgs 基类
 }
 
 public abstract class BaseLabelPrintCommand<TLabelPrintable> : ViewCommand<BaseLabelPrintCommandViewArgs>

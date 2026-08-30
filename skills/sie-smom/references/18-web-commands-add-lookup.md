@@ -1,8 +1,4 @@
-> **类型**：配方库（蒸馏自 SMOM 开发手册 /WebDev/Web命令/，2026-08-17 版本）
-> **来源**：http://10.10.51.213:30687/WebDev/Web命令/
-> **优先级**：高。写添加/选择/弹窗查看命令时先读本文件照搬模式。
-> **覆盖范围**：添加命令（表单编辑/行内编辑+自动生成单号）·通用弹窗查看命令·选择命令 LookupCommandBase（基础用法/选项面板工具栏/主表数据过滤/资源加载滞后）
-> **拆分说明**：原 `18-web-commands.md`（61K，23 篇配方）按任务域拆为 4 份：表单/列表保存提交 → `18-web-commands-form.md`；导入导出 → `18-web-commands-import-export.md`；添加/选择/弹窗查看 → `18-web-commands-add-lookup.md`；打印/附件/查找 → `18-web-commands-print-attach.md`。节号保留原手册序号（一~二十），便于溯源。
+> **拆分说明**：原 `18-web-commands.md` 按任务域拆为 4 份；节号保留原手册序号（一~二十二），跨文件不连续属正常。
 
 ---
 
@@ -31,9 +27,9 @@
 public virtual string GenerateNo()
 {
     var config = ConfigService.GetConfig<NoConfigValue>(new NoConfig(), typeof(XxxEntity));
-    if (config == null || config.BacodeRule == null)
+    if (config == null || config.NumberRuleId == null)
         throw new ValidationException("未找到单号生成规则，请检查配置项".L10N());
-    return RT.Service.Resolve<NumberRuleController>().GenerateSegment(config.BacodeRule.Id, 1).FirstOrDefault();
+    return RT.Service.Resolve<NumberRuleController>().GenerateSegment(config.NumberRuleId.Value, 1).FirstOrDefault();
 }
 
 public virtual XxxEntity GenerateEntity()
@@ -139,12 +135,12 @@ protected override void ConfigDetailsView()
 // ① Controller：GetNo + GetNewEntity（同十五节①，用 config.NumberRuleId）
 public virtual string GetNo()
 {
-    var config = ConfigService.GetConfig(new NoConfig(), typeof(Entity));
+    var config = ConfigService.GetConfig(new NoConfig(), typeof(XxxEntity));
     if (config == null || config.NumberRuleId == null)
         throw new ValidationException("未找到编号生成规则，请检查配置项".L10N());
     return RT.Service.Resolve<NumberRuleController>().GenerateSegment(config.NumberRuleId.Value, 1).First();
 }
-public virtual Entity GetNewEntity() { return new Entity { No = GetNo() }; }
+public virtual XxxEntity GetNewEntity() { return new XxxEntity { No = GetNo() }; }
 
 // ② AddCommand.cs（同十五节②）
 ```
@@ -428,10 +424,7 @@ _queryBlockProcess: function (block) {
 
 **问题**：`Ext.require` 异步加载，若 `_checkParameter` 末尾直接调 `callback()`，资源未加载完，后续创建 Criteria 等依赖类定义的代码报 undefined。
 
-**修复**：计数器 + onReady 模式（见 20.1 的 `_checkParameter` 标准实现）。要点：
-- resources 必含 `targetClassName` 和对应 Criteria 类（默认命名 `{targetClassName}Criteria`）
-- count 计数，全部就绪（`count >= resources.length`）才 callback
-- 每个 `Ext.require(res, onReady)` 传同一个 onReady
+**修复**：计数器 + onReady 模式（resources 必含 `targetClassName` 与对应 Criteria 类，全部就绪才 callback，传同一个 onReady），见 20.1 的 `_checkParameter` 标准实现。
 
 **相关变体 save**（选择后不调后端、直接前端回填子表行）：
 

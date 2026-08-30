@@ -1,10 +1,3 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：ORACLE查询规范·C#实体->SQL类型映射·JOIN·枚举·分页·避坑
-
----
-
 # Oracle SQL 查询规范（基于实体映射）
 
 ## 一、C# 实体与 Oracle 表结构映射关系
@@ -17,12 +10,12 @@
 // C# 基类（框架提供）
 public class DataEntity
 {
-    public long Id { get; set; }              // → ID NUMBER(18,0) NOT NULL PK
-    public long SyncId { get; set; }          // → SYNC_ID NUMBER(18,0) NOT NULL
-    public long? CreateBy { get; set; }       // → CREATE_BY NUMBER(18,0)
-    public DateTime? CreateDate { get; set; } // → CREATE_DATE DATE
-    public long? UpdateBy { get; set; }       // → UPDATE_BY NUMBER(18,0)
-    public DateTime? UpdateDate { get; set; } // → UPDATE_DATE DATE
+    public double Id { get; set; }            // → ID NUMBER(18,0) NOT NULL PK
+    public double SyncId { get; set; }        // → SYNC_ID NUMBER(18,0) NOT NULL
+    public double? CreateBy { get; set; }     // → CREATE_BY NUMBER(18,0)
+    public DateTime CreateDate { get; set; }  // → CREATE_DATE DATE NOT NULL
+    public double? UpdateBy { get; set; }     // → UPDATE_BY NUMBER(18,0)
+    public DateTime UpdateDate { get; set; }  // → UPDATE_DATE DATE NOT NULL
     public int? InvOrgId { get; set; }        // → INV_ORG_ID NUMBER(10,0)
     public bool IsPhantom { get; set; }       // → IS_PHANTOM NUMBER(1,0) DEFAULT 0
 }
@@ -30,12 +23,12 @@ public class DataEntity
 
 ```sql
 -- 查询时必须理解的默认字段映射
-SELECT B.ID,              -- long → NUMBER(18,0)
-       B.SYNC_ID,          -- long → NUMBER(18,0)
-       B.CREATE_BY,        -- long? → NUMBER(18,0) NULLABLE
-       B.CREATE_DATE,      -- DateTime? → DATE NULLABLE
-       B.UPDATE_BY,        -- long? → NUMBER(18,0) NULLABLE
-       B.UPDATE_DATE,      -- DateTime? → DATE NULLABLE
+SELECT B.ID,              -- double → NUMBER(18,0)
+       B.SYNC_ID,          -- double → NUMBER(18,0)
+       B.CREATE_BY,        -- double? → NUMBER(18,0) NULLABLE
+       B.CREATE_DATE,      -- DateTime → DATE NOT NULL
+       B.UPDATE_BY,        -- double? → NUMBER(18,0) NULLABLE
+       B.UPDATE_DATE,      -- DateTime → DATE NOT NULL
        B.INV_ORG_ID,       -- int? → NUMBER(10,0) NULLABLE
        B.IS_PHANTOM        -- bool → NUMBER(1,0) DEFAULT 0
 FROM EXAMPLE_BILL B;
@@ -45,9 +38,9 @@ FROM EXAMPLE_BILL B;
 
 | C# 类型 | Oracle 类型 | 查询注意事项 |
 |---------|-------------|-------------|
-| `long` / `long?` | `NUMBER(18,0)` | 精确整数，无需小数处理 |
+| `double` / `double?` | `NUMBER(18,0)` | Id 类（主键/外键，整数语义）；精确整数亦可用 long |
 | `int` / `int?` / `enum` | `NUMBER(10,0)` | 枚举值查询直接用数字 |
-| `float` / `double` | `NUMBER(18,0)` | 不含小数位 |
+| `float` | `FLOAT` | 业务浮点，避免等值比较 |
 | `decimal` | `NUMBER(18,6)` | **保留6位小数**，查询注意精度 |
 | `bool` | `NUMBER(1,0)` | 值为 0 或 1 |
 | `DateTime` / `DateTime?` | `DATE` | 精确到秒，查询用 `TO_DATE` / `DATE` |
@@ -77,12 +70,12 @@ FROM EXAMPLE_BILL B;
 
 ## 二、查询中的类型匹配规范
 
-### 2.1 NUMBER(18,0) 对应 long / long? —— 精确匹配
+### 2.1 NUMBER(18,0) 对应 double / double?（Id 类）—— 精确匹配
 
 ```csharp
 // C# 实体
-public long Id { get; set; }           // → ID NUMBER(18,0) NOT NULL
-public long? UpdateBy { get; set; }    // → UPDATE_BY NUMBER(18,0) NULLABLE
+public double Id { get; set; }         // → ID NUMBER(18,0) NOT NULL
+public double? UpdateBy { get; set; }  // → UPDATE_BY NUMBER(18,0) NULLABLE
 ```
 
 ```sql
@@ -159,8 +152,8 @@ FROM EXAMPLE_BILL;
 ```csharp
 // C# 实体
 public DateTime CreateDate { get; set; }       // → CREATE_DATE DATE NOT NULL
-public DateTime? UpdateDate { get; set; }      // → UPDATE_DATE DATE NULLABLE
-public DateTime BillDate { get; set; }         // → BILL_DATE DATE
+public DateTime UpdateDate { get; set; }       // → UPDATE_DATE DATE NOT NULL
+public DateTime? BillDate { get; set; }        // → BILL_DATE DATE NULL
 ```
 
 ```sql
@@ -170,10 +163,10 @@ FROM EXAMPLE_BILL
 WHERE CREATE_DATE >= DATE '2024-06-01'
   AND CREATE_DATE < DATE '2024-07-01';
 
--- ✅ 可空的 UpdateDate
-SELECT ID, NO, UPDATE_DATE
+-- ✅ 可空的 BillDate
+SELECT ID, NO, BILL_DATE
 FROM EXAMPLE_BILL
-WHERE UPDATE_DATE IS NOT NULL;
+WHERE BILL_DATE IS NOT NULL;
 
 -- ✅ 精确到日的查询（半开区间）
 SELECT ID, NO, BILL_DATE
@@ -195,7 +188,7 @@ public class ExampleBill : DataEntity
     public string No { get; set; }              // → NO VARCHAR2(80)
     public BillStatus Status { get; set; }      // → STATUS NUMBER(10,0)
     public decimal Amount { get; set; }         // → AMOUNT NUMBER(18,6)
-    public DateTime BillDate { get; set; }      // → BILL_DATE DATE
+    public DateTime? BillDate { get; set; }       // → BILL_DATE DATE NULL
     public WorkOrder WorkOrder { get; set; }    // → WORK_ORDER_ID NUMBER(18,0)
     public Material Material { get; set; }      // → MATERIAL_ID NUMBER(18,0)
 }
@@ -264,8 +257,8 @@ bill.UpdateDate = DateTime.Now;
 -- 对应的 SQL
 UPDATE EXAMPLE_BILL
 SET IS_PHANTOM = 1,              -- bool → NUMBER(1,0) = 1
-    UPDATE_BY = 1001,             -- long? → NUMBER(18,0)
-    UPDATE_DATE = SYSDATE         -- DateTime? → DATE
+    UPDATE_BY = 1001,             -- double? → NUMBER(18,0)
+    UPDATE_DATE = SYSDATE         -- DateTime → DATE
 WHERE ID = 100001;
 ```
 
@@ -444,18 +437,7 @@ INSERT INTO EXAMPLE_BILL (
 );
 ```
 
-### 7.2 decimal 类型 INSERT
-
-```csharp
-// C# 属性
-public decimal Amount { get; set; }   // → AMOUNT NUMBER(18,6)
-```
-
-```sql
--- ✅ Oracle 自动补齐小数位
-INSERT INTO EXAMPLE_BILL (ID, SYNC_ID, ... AMOUNT ...)
-VALUES (SEQ_EXAMPLE_BILL_ID.NEXTVAL, SEQ_EXAMPLE_BILL_SYNC_ID.NEXTVAL, ... 1000 ...);
-```
+> 数值列 INSERT 时可省略小数位，Oracle 自动补齐（如 `NUMBER(18,6)` 列直接写 `1000`）。
 
 ---
 
@@ -465,7 +447,7 @@ VALUES (SEQ_EXAMPLE_BILL_ID.NEXTVAL, SEQ_EXAMPLE_BILL_SYNC_ID.NEXTVAL, ... 1000 
 
 | C# 表达式 | SQL 条件 | 说明 |
 |-----------|----------|------|
-| `x.Id == 100001` | `ID = 100001` | `long` → `NUMBER(18,0)` |
+| `x.Id == 100001` | `ID = 100001` | `double` → `NUMBER(18,0)` |
 | `x.Status == BillStatus.Approved` | `STATUS = 1` | `enum` → `NUMBER(10,0)` |
 | `x.Status >= BillStatus.Approved` | `STATUS >= 1` | 枚举比较 → 数字比较 |
 | `x.Amount > 0` | `AMOUNT > 0` | `decimal` → `NUMBER(18,6)` |
@@ -475,7 +457,7 @@ VALUES (SEQ_EXAMPLE_BILL_ID.NEXTVAL, SEQ_EXAMPLE_BILL_SYNC_ID.NEXTVAL, ... 1000 
 | `x.WorkOrder == null` | `WORK_ORDER_ID IS NULL` | `IRefIdProperty` 是否引用 |
 | `x.No.Contains("2024")` | `NO LIKE '%2024%'` | `string` → `VARCHAR2` |
 | `x.No.StartsWith("BILL")` | `NO LIKE 'BILL%'` | `string` → `VARCHAR2` |
-| `ids.Contains(x.Id)` | `ID IN (...)` | `long` 集合 → `NUMBER(18,0)` 列表 |
+| `ids.Contains(x.Id)` | `ID IN (...)` | `double` 集合 → `NUMBER(18,0)` 列表 |
 
 ### 8.2 排序映射
 
@@ -489,16 +471,16 @@ VALUES (SEQ_EXAMPLE_BILL_ID.NEXTVAL, SEQ_EXAMPLE_BILL_SYNC_ID.NEXTVAL, ... 1000 
 
 | C# 实体字段 | SQL 列 | 类型映射 |
 |------------|--------|---------|
-| `Id` | `ID` | `long` → `NUMBER(18,0)` |
-| `SyncId` | `SYNC_ID` | `long` → `NUMBER(18,0)` |
+| `Id` | `ID` | `double` → `NUMBER(18,0)` |
+| `SyncId` | `SYNC_ID` | `double` → `NUMBER(18,0)` |
 | `No` | `NO` | `string` → `VARCHAR2(80)` |
 | `Status` | `STATUS` | `enum` → `NUMBER(10,0)` |
 | `Amount` | `AMOUNT` | `decimal` → `NUMBER(18,6)` |
-| `BillDate` | `BILL_DATE` | `DateTime` → `DATE` |
+| `BillDate` | `BILL_DATE` | `DateTime?` → `DATE NULL` |
 | `IsPhantom` | `IS_PHANTOM` | `bool` → `NUMBER(1,0)` |
 | `WorkOrder` | `WORK_ORDER_ID` | `IRefIdProperty` → `NUMBER(18,0)` |
-| `CreateDate` | `CREATE_DATE` | `DateTime?` → `DATE NULLABLE` |
-| `UpdateBy` | `UPDATE_BY` | `long?` → `NUMBER(18,0) NULLABLE` |
+| `CreateDate` | `CREATE_DATE` | `DateTime` → `DATE NOT NULL` |
+| `UpdateBy` | `UPDATE_BY` | `double?` → `NUMBER(18,0) NULLABLE` |
 
 ---
 
@@ -625,14 +607,14 @@ db.Update(bill);
 UPDATE EXAMPLE_BILL
 SET STATUS = 1,                    -- enum → NUMBER(10,0)
     AMOUNT = 1000,                  -- decimal → NUMBER(18,6)
-    UPDATE_BY = 1001,              -- long? → NUMBER(18,0)
-    UPDATE_DATE = SYSDATE          -- DateTime? → DATE
+    UPDATE_BY = 1001,              -- double? → NUMBER(18,0)
+    UPDATE_DATE = SYSDATE          -- DateTime → DATE
 WHERE ID = 100001
   AND IS_PHANTOM = 0;
 
 -- 关联更新：根据子表汇总更新主表（同时更新 DataEntity 基础字段）
 UPDATE EXAMPLE_BILL B
-SET (B.AMOUNT, B.UPDATE_BY, B.UPDATE_DATE) = (
+SET (AMOUNT, UPDATE_BY, UPDATE_DATE) = (
     SELECT ROUND(SUM(L.LINE_AMOUNT), 6), 1001, SYSDATE
     FROM EXAMPLE_BILL_LINE L
     WHERE L.BILL_ID = B.ID
@@ -678,14 +660,14 @@ SELECT ID, NO FROM EXAMPLE_BILL WHERE STATUS = 1;
 ### 10.4 DateTime 可空字段判断
 
 ```sql
--- ❌ 错误：UpdateDate 是 DateTime?，不能直接用等值判断
-SELECT ID, NO FROM EXAMPLE_BILL WHERE UPDATE_DATE = NULL;
+-- ❌ 错误：BillDate 是 DateTime?，不能直接用等值判断
+SELECT ID, NO FROM EXAMPLE_BILL WHERE BILL_DATE = NULL;
 
 -- ✅ 正确：NULL 判断使用 IS NULL
-SELECT ID, NO FROM EXAMPLE_BILL WHERE UPDATE_DATE IS NULL;
+SELECT ID, NO FROM EXAMPLE_BILL WHERE BILL_DATE IS NULL;
 
--- ✅ 正确：判断是否有过更新（C#: x.UpdateDate != null）
-SELECT ID, NO FROM EXAMPLE_BILL WHERE UPDATE_DATE IS NOT NULL;
+-- ✅ 正确：判断是否已填值（C#: x.BillDate != null）
+SELECT ID, NO FROM EXAMPLE_BILL WHERE BILL_DATE IS NOT NULL;
 ```
 
 ---
@@ -714,7 +696,7 @@ SELECT B.ID,                     -- DataEntity.Id
        B.NO,                     -- 业务字段
        B.STATUS,                 -- 业务字段（BillStatus 枚举 → NUMBER(10,0)）
        B.AMOUNT,                 -- 业务字段（decimal → NUMBER(18,6)）
-       B.BILL_DATE               -- 业务字段（DateTime → DATE）
+       B.BILL_DATE               -- 业务字段（DateTime? → DATE NULL）
 FROM EXAMPLE_BILL B
 WHERE B.IS_PHANTOM = 0
   AND B.STATUS = 1;
@@ -742,7 +724,7 @@ WHERE IS_PHANTOM = 0
 
 ## 十二、附则
 
-1. **SELECT 字段顺序**：业务字段在前，DataEntity 基类字段在后。例如 `NO, STATUS, AMOUNT, CREATE_DATE` 在前，`IS_PHANTOM, SYNC_ID` 在后。
+1. **SELECT 字段顺序**：业务字段在前，DataEntity 基类字段在后。例如 `NO, STATUS, AMOUNT, BILL_DATE` 在前，`IS_PHANTOM, SYNC_ID` 在后。
 2. **关键字大写**：`SELECT`、`FROM`、`WHERE`、`JOIN`、`AND`、`OR`、`ORDER BY` 等关键字统一大写。
 3. **表名/字段名大写**：与建表规范一致，所有表名和字段名大写。
 4. **参数占位符**：使用 `:paramName` 格式（ODP.NET / Oracle.ManagedDataAccess），参数名与 C# 属性名对应。

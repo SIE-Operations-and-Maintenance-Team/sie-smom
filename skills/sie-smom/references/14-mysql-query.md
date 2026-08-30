@@ -1,10 +1,3 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：MySQL查询规范·C#实体->SQL类型映射·JOIN·枚举·分页·避坑
-
----
-
 # MySQL 查询规范（基于实体映射）
 
 ## 一、C# 实体与 MySQL 表结构映射关系
@@ -17,12 +10,12 @@
 // C# 基类（框架提供）
 public class DataEntity
 {
-    public long Id { get; set; }              // → ID BIGINT NOT NULL PK
-    public long SyncId { get; set; }          // → SYNC_ID BIGINT NOT NULL
-    public long? CreateBy { get; set; }       // → CREATE_BY BIGINT NULL
-    public DateTime? CreateDate { get; set; } // → CREATE_DATE DATETIME NULL
-    public long? UpdateBy { get; set; }       // → UPDATE_BY BIGINT NULL
-    public DateTime? UpdateDate { get; set; } // → UPDATE_DATE DATETIME NULL
+    public double Id { get; set; }            // → ID BIGINT NOT NULL PK
+    public double SyncId { get; set; }        // → SYNC_ID BIGINT NOT NULL
+    public double? CreateBy { get; set; }     // → CREATE_BY BIGINT NULL
+    public DateTime CreateDate { get; set; }  // → CREATE_DATE DATETIME NOT NULL
+    public double? UpdateBy { get; set; }     // → UPDATE_BY BIGINT NULL
+    public DateTime UpdateDate { get; set; }  // → UPDATE_DATE DATETIME NOT NULL
     public int? InvOrgId { get; set; }        // → INV_ORG_ID INT NULL
     public bool IsPhantom { get; set; }       // → IS_PHANTOM TINYINT(1) NOT NULL DEFAULT 0
 }
@@ -30,12 +23,12 @@ public class DataEntity
 
 ```sql
 -- 查询时必须理解的默认字段映射
-SELECT B.ID,              -- long → BIGINT
-       B.SYNC_ID,          -- long → BIGINT
-       B.CREATE_BY,        -- long? → BIGINT NULL
-       B.CREATE_DATE,      -- DateTime? → DATETIME NULL
-       B.UPDATE_BY,        -- long? → BIGINT NULL
-       B.UPDATE_DATE,      -- DateTime? → DATETIME NULL
+SELECT B.ID,              -- double → BIGINT
+       B.SYNC_ID,          -- double → BIGINT
+       B.CREATE_BY,        -- double? → BIGINT NULL
+       B.CREATE_DATE,      -- DateTime → DATETIME NOT NULL
+       B.UPDATE_BY,        -- double? → BIGINT NULL
+       B.UPDATE_DATE,      -- DateTime → DATETIME NOT NULL
        B.INV_ORG_ID,       -- int? → INT NULL
        B.IS_PHANTOM        -- bool → TINYINT(1) DEFAULT 0
 FROM EXAMPLE_BILL B;
@@ -45,9 +38,9 @@ FROM EXAMPLE_BILL B;
 
 | C# 类型 | MySQL 类型 | 查询注意事项 |
 |---------|-------------|-------------|
-| `long` / `long?` | `BIGINT` | 精确整数，直接等值匹配 |
+| `double` / `double?` | `BIGINT` | Id 类（主键/外键，整数语义）；精确整数亦可用 long，直接等值匹配 |
 | `int` / `int?` / `enum` | `INT` | 枚举值查询直接用数字 |
-| `float` / `double` | `DOUBLE` | 近似浮点，避免等值比较 |
+| `float` | `DOUBLE` | 业务浮点，避免等值比较 |
 | `decimal` | `DECIMAL(18,6)` | **保留6位小数**，精确数值 |
 | `bool` | `TINYINT(1)` | 值为 0 或 1 |
 | `DateTime` / `DateTime?` | `DATETIME` | 精确到秒，查询用字符串字面量 |
@@ -77,12 +70,12 @@ FROM EXAMPLE_BILL B;
 
 ## 二、查询中的类型匹配规范
 
-### 2.1 BIGINT 对应 long / long? —— 精确匹配
+### 2.1 BIGINT 对应 double / double?（Id 类）—— 精确匹配
 
 ```csharp
 // C# 实体
-public long Id { get; set; }           // → ID BIGINT NOT NULL
-public long? UpdateBy { get; set; }    // → UPDATE_BY BIGINT NULL
+public double Id { get; set; }         // → ID BIGINT NOT NULL
+public double? UpdateBy { get; set; }  // → UPDATE_BY BIGINT NULL
 ```
 
 ```sql
@@ -92,7 +85,7 @@ SELECT ID, NO FROM EXAMPLE_BILL WHERE ID = 100001;
 -- ✅ UPDATE_BY 可空，用 IS NULL 判断
 SELECT ID, NO FROM EXAMPLE_BILL WHERE UPDATE_BY IS NULL;
 
--- ✅ 批量查询（注意：IN 列表不得超过 1000 项，超过应改用分批查询或临时表 JOIN）
+-- ✅ 批量查询（IN 列表过大时建议分批或临时表 JOIN——性能考虑；MySQL 无 Oracle 的 1000 项语法限制）
 SELECT ID, NO FROM EXAMPLE_BILL WHERE ID IN (100001, 100002, 100003);
 ```
 
@@ -159,8 +152,8 @@ FROM EXAMPLE_BILL;
 ```csharp
 // C# 实体
 public DateTime CreateDate { get; set; }       // → CREATE_DATE DATETIME NOT NULL
-public DateTime? UpdateDate { get; set; }      // → UPDATE_DATE DATETIME NULL
-public DateTime BillDate { get; set; }         // → BILL_DATE DATETIME
+public DateTime UpdateDate { get; set; }       // → UPDATE_DATE DATETIME NOT NULL
+public DateTime? BillDate { get; set; }        // → BILL_DATE DATETIME NULL
 ```
 
 ```sql
@@ -170,10 +163,10 @@ FROM EXAMPLE_BILL
 WHERE CREATE_DATE >= '2024-06-01 00:00:00'
   AND CREATE_DATE < '2024-07-01 00:00:00';
 
--- ✅ 可空的 UpdateDate
-SELECT ID, NO, UPDATE_DATE
+-- ✅ 可空的 BillDate
+SELECT ID, NO, BILL_DATE
 FROM EXAMPLE_BILL
-WHERE UPDATE_DATE IS NOT NULL;
+WHERE BILL_DATE IS NOT NULL;
 
 -- ✅ 精确到日的查询（半开区间）
 SELECT ID, NO, BILL_DATE
@@ -200,7 +193,7 @@ public class ExampleBill : DataEntity
     public string No { get; set; }              // → NO VARCHAR(80)
     public BillStatus Status { get; set; }      // → STATUS INT
     public decimal Amount { get; set; }         // → AMOUNT DECIMAL(18,6)
-    public DateTime BillDate { get; set; }      // → BILL_DATE DATETIME
+    public DateTime? BillDate { get; set; }       // → BILL_DATE DATETIME NULL
     public WorkOrder WorkOrder { get; set; }    // → WORK_ORDER_ID BIGINT
     public Material Material { get; set; }      // → MATERIAL_ID BIGINT
 }
@@ -269,8 +262,8 @@ bill.UpdateDate = DateTime.Now;
 -- 对应的 SQL
 UPDATE EXAMPLE_BILL
 SET IS_PHANTOM = 1,              -- bool → TINYINT(1) = 1
-    UPDATE_BY = 1001,            -- long? → BIGINT
-    UPDATE_DATE = NOW()          -- DateTime? → DATETIME
+    UPDATE_BY = 1001,            -- double? → BIGINT
+    UPDATE_DATE = NOW()          -- DateTime → DATETIME
 WHERE ID = 100001;
 ```
 
@@ -459,13 +452,7 @@ INSERT INTO EXAMPLE_BILL (
 
 > **⚠️ ID 取值说明**：MySQL 若采用 `AUTO_INCREMENT` 自增主键，INSERT 时**不写入 ID 列**，由数据库自动生成；若沿用框架"显式序列"习惯（与 MSSQL/Oracle 规范一致），则需先 `SELECT 序列值` 再写入。MySQL 8.0 用 `AUTO_INCREMENT` 即可，无需额外序列对象。
 
-### 7.2 DECIMAL 类型 INSERT
-
-```sql
--- MySQL 自动补齐小数位
-INSERT INTO EXAMPLE_BILL (ID, SYNC_ID, ... AMOUNT ...)
-VALUES (100002, 2, ... 1000 ...);
-```
+> 数值列 INSERT 时可省略小数位，MySQL 自动补齐（如 `DECIMAL(18,6)` 列直接写 `1000`）。
 
 ---
 
@@ -475,7 +462,7 @@ VALUES (100002, 2, ... 1000 ...);
 
 | C# 表达式 | SQL 条件 | 说明 |
 |-----------|----------|------|
-| `x.Id == 100001` | `ID = 100001` | `long` → `BIGINT` |
+| `x.Id == 100001` | `ID = 100001` | `double` → `BIGINT` |
 | `x.Status == BillStatus.Approved` | `STATUS = 1` | `enum` → `INT` |
 | `x.Status >= BillStatus.Approved` | `STATUS >= 1` | 枚举比较 → 数字比较 |
 | `x.Amount > 0` | `AMOUNT > 0` | `decimal` → `DECIMAL(18,6)` |
@@ -485,7 +472,7 @@ VALUES (100002, 2, ... 1000 ...);
 | `x.WorkOrder == null` | `WORK_ORDER_ID IS NULL` | `IRefIdProperty` 是否引用 |
 | `x.No.Contains("2024")` | `NO LIKE '%2024%'` | `string` → `VARCHAR` |
 | `x.No.StartsWith("BILL")` | `NO LIKE 'BILL%'` | `string` → `VARCHAR` |
-| `ids.Contains(x.Id)` | `ID IN (...)` | `long` 集合 → `BIGINT` 列表 |
+| `ids.Contains(x.Id)` | `ID IN (...)` | `double` 集合 → `BIGINT` 列表 |
 
 ### 8.2 排序映射
 
@@ -499,16 +486,16 @@ VALUES (100002, 2, ... 1000 ...);
 
 | C# 实体字段 | SQL 列 | 类型映射 |
 |------------|--------|---------|
-| `Id` | `ID` | `long` → `BIGINT` |
-| `SyncId` | `SYNC_ID` | `long` → `BIGINT` |
+| `Id` | `ID` | `double` → `BIGINT` |
+| `SyncId` | `SYNC_ID` | `double` → `BIGINT` |
 | `No` | `NO` | `string` → `VARCHAR(80)` |
 | `Status` | `STATUS` | `enum` → `INT` |
 | `Amount` | `AMOUNT` | `decimal` → `DECIMAL(18,6)` |
-| `BillDate` | `BILL_DATE` | `DateTime` → `DATETIME` |
+| `BillDate` | `BILL_DATE` | `DateTime?` → `DATETIME NULL` |
 | `IsPhantom` | `IS_PHANTOM` | `bool` → `TINYINT(1)` |
 | `WorkOrder` | `WORK_ORDER_ID` | `IRefIdProperty` → `BIGINT` |
-| `CreateDate` | `CREATE_DATE` | `DateTime?` → `DATETIME NULL` |
-| `UpdateBy` | `UPDATE_BY` | `long?` → `BIGINT NULL` |
+| `CreateDate` | `CREATE_DATE` | `DateTime` → `DATETIME NOT NULL` |
+| `UpdateBy` | `UPDATE_BY` | `double?` → `BIGINT NULL` |
 
 ---
 
@@ -618,7 +605,7 @@ FROM EXAMPLE_BILL B
 WHERE B.IS_PHANTOM = 0
   AND B.STATUS = 1
 ORDER BY B.ID DESC
-LIMIT #{size} OFFSET (#{page} - 1) * #{size};
+LIMIT #{size} OFFSET #{offset};   -- offset=(page-1)*size 须在应用层算好，LIMIT/OFFSET 不接受表达式
 
 -- 大数据量时使用游标分页（避免 OFFSET 深翻页性能问题）
 SELECT B.ID, B.NO, B.AMOUNT, B.STATUS, B.BILL_DATE
@@ -646,8 +633,8 @@ db.Update(bill);
 UPDATE EXAMPLE_BILL
 SET STATUS = 1,                    -- enum → INT
     AMOUNT = 1000,                 -- decimal → DECIMAL(18,6)
-    UPDATE_BY = 1001,              -- long? → BIGINT
-    UPDATE_DATE = NOW()            -- DateTime? → DATETIME
+    UPDATE_BY = 1001,              -- double? → BIGINT
+    UPDATE_DATE = NOW()            -- DateTime → DATETIME
 WHERE ID = 100001
   AND IS_PHANTOM = 0;
 
@@ -704,14 +691,14 @@ SELECT ID, NO FROM EXAMPLE_BILL WHERE STATUS = 1;
 ### 10.4 DateTime 可空字段判断
 
 ```sql
--- ❌ 错误：UpdateDate 是 DateTime?，不能直接用等值判断
-SELECT ID, NO FROM EXAMPLE_BILL WHERE UPDATE_DATE = NULL;
+-- ❌ 错误：BillDate 是 DateTime?，不能直接用等值判断
+SELECT ID, NO FROM EXAMPLE_BILL WHERE BILL_DATE = NULL;
 
 -- ✅ 正确：NULL 判断使用 IS NULL
-SELECT ID, NO FROM EXAMPLE_BILL WHERE UPDATE_DATE IS NULL;
+SELECT ID, NO FROM EXAMPLE_BILL WHERE BILL_DATE IS NULL;
 
--- ✅ 正确：判断是否有过更新（C#: x.UpdateDate != null）
-SELECT ID, NO FROM EXAMPLE_BILL WHERE UPDATE_DATE IS NOT NULL;
+-- ✅ 正确：判断是否已填值（C#: x.BillDate != null）
+SELECT ID, NO FROM EXAMPLE_BILL WHERE BILL_DATE IS NOT NULL;
 ```
 
 ### 10.5 字符串转义
@@ -727,8 +714,8 @@ SELECT ID, NO FROM EXAMPLE_BILL WHERE NO = 'BILL''2024';
 ### 10.6 保留字与标识符
 
 ```sql
--- ❌ 错误：NO 在 SQL Server / Oracle 中是保留字习惯，MySQL 中 NO 不是保留字，
---     但 STATUS、RANK、GROUP 等是 MySQL 保留字，不加反引号会报语法错误
+-- ⚠️ 注意：NO / STATUS 在 MySQL 中不是保留字，但 RANK（8.0+）、GROUP 等是，
+--     使用保留字作列名必须加反引号
 SELECT ID, STATUS FROM EXAMPLE_BILL;
 
 -- ✅ 正确：使用反引号包裹可能冲突的标识符
@@ -759,7 +746,7 @@ FROM EXAMPLE_BILL;
 -- ❌ 错误：DOUBLE 是近似浮点，等值比较不可靠
 SELECT ID, NO FROM EXAMPLE_BILL WHERE QTY_DOUBLE = 0.3;
 
--- ✅ 正确：使用 ABS 范围比较（注意 MySQL 中 ABS 不是函数式语法，用 ABS(col - 0.3) < 1e-9）
+-- ✅ 正确：使用 ABS 范围比较，规避 DOUBLE 浮点精度问题
 SELECT ID, NO FROM EXAMPLE_BILL WHERE ABS(QTY_DOUBLE - 0.3) < 1e-9;
 ```
 
@@ -789,7 +776,7 @@ SELECT B.ID,                     -- DataEntity.Id
        B.NO,                     -- 业务字段
        B.STATUS,                 -- 业务字段（BillStatus 枚举 → INT）
        B.AMOUNT,                 -- 业务字段（decimal → DECIMAL(18,6)）
-       B.BILL_DATE               -- 业务字段（DateTime → DATETIME）
+       B.BILL_DATE               -- 业务字段（DateTime? → DATETIME NULL）
 FROM EXAMPLE_BILL B
 WHERE B.IS_PHANTOM = 0
   AND B.STATUS = 1;
@@ -823,15 +810,15 @@ WHERE IS_PHANTOM = 0
 | 当前时间 | `SYSDATE` | `GETDATE()` | `NOW()` |
 | 主键生成 | `SEQ_ID.NEXTVAL` | `NEXT VALUE FOR [dbo].[SEQ_ID]` | `AUTO_INCREMENT`（或先取序列值再 INSERT） |
 | 字符串前缀 | `'string'` | `N'string'`（Unicode） | `'string'`（无前缀，库/列字符集决定） |
-| 分页 | `OFFSET n ROWS FETCH NEXT m ROWS ONLY` | `OFFSET n ROWS FETCH NEXT m ROWS ONLY` | `LIMIT m OFFSET n` |
-| 限制行数 | `FETCH FIRST n ROWS ONLY` | `TOP n` | `LIMIT n` |
+| 分页 | `OFFSET n ROWS FETCH NEXT m ROWS ONLY`（12c+） | `OFFSET n ROWS FETCH NEXT m ROWS ONLY` | `LIMIT m OFFSET n` |
+| 限制行数 | `FETCH FIRST n ROWS ONLY`（12c+） | `TOP n` | `LIMIT n` |
 | NVL / COALESCE | `NVL(col, 0)` | `ISNULL(col, 0)` / `COALESCE(col, 0)` | `IFNULL(col, 0)` / `COALESCE(col, 0)` |
 | 标识符引用 | 大写字段名 | `[方括号]` | 反引号 `` ` ``（必要时） |
 | 模式前缀 | 无（或用户名） | `[dbo]` | 库名（`库名.表名`） |
 | 日期字面量 | `DATE '2024-01-01'` 或 `TO_DATE` | `'2024-01-01'` 字符串自动转换 | `'2024-01-01 00:00:00'` 字符串字面量 |
 | 日期格式化 | `TO_CHAR(date, 'fmt')` | `CONVERT(varchar, date, style)` / `FORMAT()` | `DATE_FORMAT(date, '%Y-%m-%d')` |
 | 类型转换 | `TO_NUMBER`、`TO_CHAR` | `CAST`、`CONVERT` | `CAST`、`CONVERT` |
-| 可空字段排序 | `NULLS FIRST / LAST` | 默认 NULL 最小 | 默认 NULL 最小（可用 `ISNULL(col, ...)` 控制） |
+| 可空字段排序 | `NULLS FIRST / LAST` | 默认 NULL 最小 | 默认 NULL 最小（可用 `IFNULL(col, ...)` 或 `ORDER BY col IS NULL` 控制） |
 | 列注释 | `COMMENT ON COLUMN` | `sp_addextendedproperty` | 建表时 `COMMENT '...'` 或 `ALTER TABLE ... MODIFY ... COMMENT '...'` |
 | 关联更新 | `UPDATE ... SET (col) = (子查询)` | `UPDATE ... FROM 子查询` | `UPDATE ... JOIN 子查询` |
 | 布尔类型 | `NUMBER(1,0)` | `BIT` | `TINYINT(1)` |

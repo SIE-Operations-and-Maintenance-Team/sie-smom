@@ -1,14 +1,6 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：项目分层(Module/Web/Wpf/xUnit/Job/Statistics)·Module注册·DataProvider·IoC(RT.Service·RF·DB)
-
----
-
 # 赛意SMOM项目架构总览
 
 > **适用范围**:本规范适用于项目中所有 `*.cs` 文件,始终生效。
-> **内容概要**:项目分层(Module/Web/Wpf/xUnit/Job/Statistics)、Module 注册、DataProvider 定义、IoC 服务注册(RT.Service / RF / DB)。
 
 本项目基于 .NET 6.0 的工业制造执行系统(MES)，使用 SIE 自研框架。
 
@@ -169,7 +161,6 @@ DB.TransactionScope(connectionString) // 事务
 
 ## 五、属性与建表命名陷阱（高价值坑，多为静默失败）
 
-> 注意：违反常无异常提示，务必遵守。
 
 - **相邻两字母不能同时大写**：`WOType` 生成字段 `W_O_TYPE`，应写 `WoType` 生成 `WO_TYPE`。
 - **属性名不能与框架属性冲突**：禁用 `Id / CreateBy / UpdateBy / CreateDate / UpdateDate / InvOrgId / IsPhantom / SyncId`，冲突会**静默映射失败且无异常提示**。
@@ -180,18 +171,3 @@ DB.TransactionScope(connectionString) // 事务
 - **通用词不加修饰**：`Code / Name / Description / Type` 不加修饰词；状态统一用 `State` 不用 `Status`。
 - **BS 基类不能含列表属性**：否则生成界面解析异常。
 - **数据库表名**：`模块_表释义名`；主表代表整个模块时全大写（`WO` / `WO_BOM` / `WO_PROC_BILL`）；Oracle 标识符 ≤30、表名尽量 ≤15 字符（序列+同步序列占用），过长用缩写（`DefectResponsibilityCategory` → `DEF_RESP_CATE`）；不含 `.` 和关键字。
-
----
-
-## 六、环境搭建速查（SMOM8.2）
-
-- **首次拿到项目**：先确保编译通过、能运行登录、加载界面，再做功能。
-- **版本要求**：VS2019.16.4+；安装 net core sdk 3.1 与 2.2（8.2+ 用 3.1，旧版用 2.2）。
-- **工程类型**：服务端 `.NET Standard 2.0`；Web 端 `.NET Core 3.1`；WPF 端 `.NET Framework 4.7.2`。
-- **引用 dll**：服务端 `SIE.dll` + `SIE.Common.dll`；客户端 `SIE.dll` + `SIE.Web.dll` + `SIE.Common.dll` + `SIE.Web.Common.dll`；有依赖关系时只加最后一层 dll。
-- **AssemblyInfo 冲突**：编辑 .csproj，在 PropertyGroup 下加 `<GenerateAssemblyInfo>false</GenerateAssemblyInfo>`。
-- **nuget 迁移**：服务端 / Web 端无 `packages.config` / `app.config`，迁移时不要带这两个文件。
-- **数据访问模式**：直连数据库设 `Local`；起 host 设 `Remote`，`DataPortal.Url` 为 host 链接。
-- **配置文件**：`launchSettings.json` 环境变量为 `Development` 时读 `appsettings.Development.json`。
-- **框架支持数据库**：SQL Server / MySQL / Oracle（Oracle 用得多）。
-- **新菜单**：需先模块初始化，再配置菜单权限。

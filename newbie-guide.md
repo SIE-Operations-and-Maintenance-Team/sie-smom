@@ -8,7 +8,7 @@
 
 这是一个 Claude Code Skill，给 AI 装上后，它能帮你写赛意 SMOM 平台（.NET 6.0 MES + SIE 自研框架）的代码。
 
-**核心思想**：AI 写 SMOM 代码前先查参考底库（16 份精炼规则），**不臆造框架 API**——找不到就明说「需查证」，绝不编造。
+**核心思想**：AI 写 SMOM 代码前先查参考底库（25 份：精炼规则 + 数据库规范 + 配方库），**不臆造框架 API**——找不到就明说「需查证」，绝不编造。
 
 ## 一、安装（5 分钟，一次性）
 
@@ -62,7 +62,7 @@ AI 会先查 `references/` 参考底库，找到真实 API 签名与示例后再
 确认：① 已安装且 marketplace 已刷新；② 需求里包含 SMOM 信号词（`SIE.*`、`Property<T>`、`IS_PHANTOM` 等），或直接点名"用 sie-smom 规则"。
 
 **Q3：参考底库有哪些？**
-16 份精炼规则（编号 01-17，13 号历史删除）：架构 / WPF / 实体数据 / Web ViewConfig / Controller / Web 前端 / 通用 / 四库（MSSQL/Oracle/MySQL/PostgreSQL）建表与查询 / PDA 前端。见 SKILL.md 第 4 节路由表。
+25 份参考底库（编号 01-23，13 号未使用；18 号 Web 命令配方拆为 4 份）：01-07、12 精炼规则（架构 / WPF / 实体数据 / Web ViewConfig / Controller / Web 前端 / 通用 / PDA 前端）、08-11 与 14-17 四库（MSSQL/Oracle/MySQL/PostgreSQL）建表与查询、18-23 配方库（Web 命令 / Web 行为与编辑器 / Web 前端 / WPF / 服务端工具 / 问题库）。见 SKILL.md 第 4 节路由表。
 
 ---
 

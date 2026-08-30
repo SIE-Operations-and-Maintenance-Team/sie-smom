@@ -1,10 +1,3 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：ORACLE建表规范·DataEntity默认列·序列·类型映射·命名·COMMENT
-
----
-
 # Oracle 建表规范
 
 ## 一、表结构通用模板
@@ -14,7 +7,7 @@
 ```sql
 CREATE TABLE TABLE_NAME (
     -- ========== 基础字段（DataEntity 继承） ==========
-    ID                    NUMBER(18,0)    NOT NULL,  -- 主键ID（对应 C# float/double）
+    ID                    NUMBER(18,0)    NOT NULL,  -- 主键ID（对应 C# double）
     SYNC_ID               NUMBER(18,0)    NOT NULL,  -- 同步ID
     CREATE_BY             NUMBER(18,0),               -- 创建人ID
     CREATE_DATE           DATE            NOT NULL,   -- 创建时间
@@ -63,7 +56,8 @@ CREATE SEQUENCE SEQ_TABLE_NAME_SYNC_ID
 
 | C# 类型 | Oracle 类型 | 说明 |
 |---------|-------------|------|
-| `float` / `double` | `NUMBER(18,0)` | 主键、外键ID |
+| `double` / `double?` | `NUMBER(18,0)` | 主键、外键ID（DataEntity.Id / 引用属性） |
+| `float` | `FLOAT` | 业务浮点数值 |
 | `int` / `enum` | `NUMBER(10,0)` | 枚举值、状态码 |
 | `string`（单据号/用户名） | `VARCHAR2(80)` | 短文本，按需调整长度 |
 | `string`（URL/长文本） | `VARCHAR2(4000)` | 长文本 |
@@ -217,14 +211,11 @@ CHECK (STATUS IN (0, 1, 2));
 2. **提取业务属性**（Property字段）：
    - `string` → `VARCHAR2`
    - `int`/`enum` → `NUMBER(10,0)`
-   - `float`/`double` → `NUMBER(18,0)`
+   - `float` → `FLOAT`
+   - `double`/`double?` → `NUMBER(18,0)`（Id / 引用属性）
    - `decimal` → `NUMBER(18,6)`
    - `DateTime` → `DATE`
 3. **提取引用类型**（IRefIdProperty）→ 映射为 `NUMBER(18,0)` 外键字段
 4. **解析`[Label]`** → 生成COMMENT备注
 5. **检查`MapTable`配置** → 确定表名
 6. **检查`HasIndex`** → 生成索引
-
----
-
-**当新建C#实体类时，请按照以上规范生成对应的Oracle建表脚本。**

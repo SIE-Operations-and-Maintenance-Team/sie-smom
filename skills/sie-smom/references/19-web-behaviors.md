@@ -1,10 +1,3 @@
-> **类型**：配方库（蒸馏自 SMOM 开发手册 /WebDev/Web行为/ + /WebDev/Web编辑器/，14 页，2026-08-17 版本）
-> **来源**：http://10.10.51.213:30687/WebDev/
-> **优先级**：高。写 Web Behavior（行为）或扩展编辑器时先读本文件照搬模式。
-> **覆盖范围**：模糊搜索枚举编辑器·枚举多选编辑器·动态列透视表·动态切换枚举范围·命令可执行时机控制·单元格/行变色·底部状态栏·默认分页大小·内存排序·属性变更事件·自动填充员工信息·统计行·视图通用扩展方法（自动列宽/必填标记/双击触发命令）
-
----
-
 # Web Behavior 与扩展编辑器配方库
 
 ## 配方索引
@@ -86,9 +79,9 @@ Ext.define('SIE.Web.Core.Editors.EnumFilter', {
 ```csharp
 View.Property(p => p.Color).UseEnumExEditor();                       // 与普通枚举编辑器一致
 View.Property(p => p.Color).UseEnumExEditor(p => {                   // 筛选可选枚举
-    return new Dictionary<string, string>() {
-        ((int)Color.Red).ToString(), Color.Red.ToLabel(),
-        ((int)Color.Blue).ToString(), Color.Blue.ToLabel(),
+    return new Dictionary<string, string> {
+        { ((int)Color.Red).ToString(), Color.Red.ToLabel() },
+        { ((int)Color.Blue).ToString(), Color.Blue.ToLabel() },
     };
 });
 View.Property(p => p.Color).UseEnumExEditor(p => { p.MultiSelect = true; });  // 多选（字段类型须为 string）
@@ -155,7 +148,7 @@ onViewReady: function (view) {
 
 **导出配合**：exportXls 中按 `colIdx + '_Unqual'` 判断，设 `cellConfig.style = { font: { Color: '#FF0000' } }`。
 
-**坑点**：renderer 不能直接引用循环变量 i（闭包陷阱）；`addColumn` 必须两个参数（Store 字段定义 + 列配置）；父表切行必须先清理旧动态列。
+**坑点**：renderer 不能直接引用循环变量 i（闭包陷阱）；`addColumn` 前两个参数必填（Store 字段定义 + 列配置），第三参为插入位置（可选）；父表切行必须先清理旧动态列。
 
 ---
 
@@ -368,7 +361,7 @@ _propertyChanged: function (editor, context, eOpts) {
 
 ## 十一、新增自动填充当前员工信息行为
 
-**场景**：Grid 新增行自动填 CreateById/UpdateById 等为当前登录人。基类 `SIE.Web.Core.Behaviors.ListAutoFillEmployeeBehavior`（纯 JS 无 C#），**派生只需覆盖 employeeFields**：
+**场景**：Grid 新增行自动填 CreateById/UpdateById 等为当前登录人。基类 `SIE.Web.Core.Behaviors.AutoFillEmployeeBehavior`（纯 JS 无 C#，与下方 extend 一致），**派生只需覆盖 employeeFields**：
 
 ```javascript
 Ext.define('SIE.Web.XXX.Behaviors.MyBehavior', {
@@ -380,7 +373,7 @@ Ext.define('SIE.Web.XXX.Behaviors.MyBehavior', {
 
 **基类机制**：onViewReady 中 `store.un('add') → store.on('add')`（防重复绑）→ 新记录对每个 field 设置两个字段：`record.set(field, userInfo.EmployeeId)` + `record.set(field + '_Display', userInfo.Name)`（引用属性 = ID 字段 + _Display 显示字段）。
 
-**关键 API**：当前用户 `CRT.Context.GlobalContext.getContext('userInfo')`（含 EmployeeId、Name）；字段存在性校验 `record.fieldsMap && record.fieldsMap(field)`。
+**关键 API**：当前用户 `CRT.Context.GlobalContext.getContext('userInfo')`（含 EmployeeId、Name）；字段存在性校验 `record.fieldsMap && record.fieldsMap[field]`。
 
 ---
 

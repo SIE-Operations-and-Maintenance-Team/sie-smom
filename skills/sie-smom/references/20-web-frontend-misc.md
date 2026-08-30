@@ -1,10 +1,3 @@
-> **类型**：配方库 + API 速查（蒸馏自 SMOM 开发手册 /WebDev/Web底层支持/ + /WebDev/Web界面/ + /WebDev/Web经验案例/，24 页，2026-08-17 版本）
-> **来源**：http://10.10.51.213:30687/WebDev/
-> **优先级**：高。写 Web 前端 JS（调后台/事件/消息/界面处理/客制化）时先读本文件。
-> **覆盖范围**：invokeCommand/invokeDataQuery·mon/fireEvent/mun·SIE.Msg 消息·插件·Web 模块工程·界面处理(Workbench/AutoUI/弹框/日期)·三档客制化(LayoutClass/UIGenerator/ModuleRuntime)·扩展视图(Attach/Associate)·前端 Entity/View 类 API·视图配置方法·数据处理·经验案例(DM_ 跨层传参/只读视图/子页签等)
-
----
-
 # Web 前端基础与界面配方库
 
 ## 配方索引
@@ -100,7 +93,8 @@ SIE.Msg.askQuestion("询问？".t(), ok_fn, cancle_fn);               // 询问�
 SIE.Msg.confirm(msg, fn);                                          // 确认框
 SIE.Msg.showToast('操作完毕', '提示');                             // Toast（分辨率缩放后宽度有问题，建议用 Ext.toast 并设 width）
 SIE.Msg.progress('标题', '消息', '100%');                          // 进度条
-SIE.Msg.hide(); / SIE.Msg.close();
+SIE.Msg.hide();                                               // 关闭等待/进度框
+SIE.Msg.close();
 ```
 
 ---
@@ -374,7 +368,7 @@ CRT.Event.fire(Ext.String.format('{0}_refresh', view.model));
 2. JS PagingLookUpMethod（`extend: 'SIE.control.PagingLookUpMethod'`）重写 `_searchByDSPfilter`：`filter.Parameters.Entity.DM_FactoryId = parent.data.FactoryId`（parent 经 `view.getParent().getCurrent()` 取）
 3. ViewConfig：`UsePagingLookUpEditor(p => p.MethodClassName = "...")` + `UseDataSource((source, pagingInfo, keyword) => { var entity = source as Xxx; return Controller.GetXxx(entity.DM_FactoryId, ...); })`
 
-### 12.2 只读视图基类 WebViewConfigEx（完整可复制源码见手册）
+### 12.2 只读视图基类 WebViewConfigEx
 
 - `WebViewConfigEx<TEntity>`：内置三个分组 `Readonly`（通用只读，默认复用 ReadonlyList）/`ReadonlyList`/`ReadonlyDetails`
 - `ConfigView()` 自动按 ViewGroup 分支：`ConfigReadonlyList() = SetChildrenViewGroup(Readonly) + ConfigListView() + SetReadonly()`
@@ -386,7 +380,7 @@ CRT.Event.fire(Ext.String.format('{0}_refresh', view.model));
 
 - **JS 调用界面上的命令**：`view.getCommands().map[commandType]` → `Ext.getCmp(command.config.meta.id)` → `command.tryExecute(commandEl)`
 - **打开指定功能菜单**：`CRT.Workbench.addPage({ entityType: 'SIE.WMS.Portal.Receipt.PtAsn,SIE.WMS.Portal', title: '...', module: 同 entityType, isAggt: true })`
-- **热重载 JS 文件**：appsettings `dev.isDebuggingEnabled: true` → 找到 Web 工程 X 上级目录路径 Z → WebClient 的 `bin/Debug/netcoreapp3.1/path.Web工程X.json` 的 RootPath 填 Z
+- **热重载 JS 文件**：appsettings `dev.isDebuggingEnabled: true` → 找到 Web 工程 X 上级目录路径 Z → WebClient 的 `bin/Debug/net6.0/path.Web工程X.json` 的 RootPath 填 Z
 - **客制化消息提示**：`SIE.Msg._showMsg({ title, msg, buttons: Ext.Msg.YESNO, defaultFocus: Ext.Msg.NO, icon: Ext.Msg.QUESTION, iconCls: "iconfont icon-Notice1", fn })`
 - **列表回车换列 Tab 换行**：重写编辑器 `extend: 'Ext.form.field.Number'`，`specialKey` 监听 ENTER/TAB，按 dataIndex 数字后缀 +1 找下一列，找不到则下一行（`sieView.startEdit(nextEntity, nextRowIdx, nextColIdx)`，`Ext.defer 30ms`）；Tab 未消除表格原有 Tab 事件影响需自行处理
 - **通用打印工具 PrintUtil**（`SIE.Web.Core.Utils`）：`PrintEntityList(templateId, Dictionary<Type, Func<IEnumerable<object>>> getDataFuncDic, copy=1)` —— 按模板 EntityType 匹配取数方法，内部 DataChecker.CheckExists + ReportFactory + PrintProcess

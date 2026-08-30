@@ -1,10 +1,3 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：MSSQL建表规范·DataEntity默认列·序列·类型映射·命名·sp_addextendedproperty
-
----
-
 # SQL Server 建表规范
 
 ## 一、表结构通用模板
@@ -62,13 +55,14 @@ CREATE SEQUENCE [dbo].[SEQ_TABLE_NAME_SYNC_ID]
 > **注意**：
 > - SQL Server 序列属于架构，命名中使用 `[dbo]` 占位。
 > - 序列的增量值以整数步进，但插入时赋值给 `FLOAT` 列会自动转换为浮点数，不影响使用。
-> - 若实际开发中倾向使用 `IDENTITY` 自增，可省略序列，但为保持与 Oracle 规范一致，此处保留序列方式。
+> - MSSQL 不使用 `IDENTITY`，主键一律取序列号（与 Oracle 规范一致）。
 
 ## 三、字段类型映射规则
 
 | C# 类型 | SQL Server 类型 | 说明 |
 |---------|-----------------|------|
-| `float` / `double` | `FLOAT`（等价于 `FLOAT(53)`） | 主键、外键ID（对应 Oracle `NUMBER(18,0)`，但改为浮点） |
+| `double` / `double?` | `FLOAT`（等价于 `FLOAT(53)`） | 主键、外键ID（DataEntity.Id / 引用属性，DbBulkProvider 按小数切分取号）；业务浮点 |
+| `float` | `FLOAT`（等价于 `FLOAT(53)`） | 业务浮点数值 |
 | `int` / `enum` | `INT` | 枚举值、状态码（对应 Oracle `NUMBER(10,0)`） |
 | `string`（单据号/用户名） | `NVARCHAR(80)` | 短文本，按需调整长度（使用NVARCHAR支持Unicode） |
 | `string`（URL/长文本） | `NVARCHAR(4000)` | 长文本（或 `NVARCHAR(MAX)` 根据场景） |
@@ -85,7 +79,7 @@ CREATE SEQUENCE [dbo].[SEQ_TABLE_NAME_SYNC_ID]
 
 ### 列名
 - 全大写，下划线分隔
-- 避免使用SQL Server保留字（如 `NO` 可以使用，但最好加方括号）
+- `NO` 属 ODBC 保留字/SQL Server 未来关键字（当前可用），建议始终加方括号
 - 外键字段建议包含 `_ID` 后缀
 - 枚举字段建议包含状态含义的后缀或前缀
 
@@ -216,14 +210,14 @@ EXEC sp_addextendedproperty N'MS_Description', N'所属机构ID', 	N'SCHEMA',	N'
 	N'COLUMN',
 	N'INV_ORG_ID';
 EXEC sp_addextendedproperty N'MS_Description', N'虚体标记(0=否,1=是)', N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'IS_PHANTOM';
-EXEC sp_addextendedproperty N'MS_Description', N'单据号',      N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'NO]';
-EXEC sp_addextendedproperty N'MS_Description', N'单据类型',    N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'BILL_TYPE]';
-EXEC sp_addextendedproperty N'MS_Description', N'状态(0=草稿,1=已提交,2=已审核)', N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'STATUS]';
-EXEC sp_addextendedproperty N'MS_Description', N'数量',        N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'QTY]';
-EXEC sp_addextendedproperty N'MS_Description', N'金额',        N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'AMOUNT]';
-EXEC sp_addextendedproperty N'MS_Description', N'备注',        N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'REMARK]';
-EXEC sp_addextendedproperty N'MS_Description', N'单据日期',    N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'BILL_DATE]';
-EXEC sp_addextendedproperty N'MS_Description', N'工单ID(引用WorkOrder)', N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN]',	N'WORK_ORDER_ID]';
+EXEC sp_addextendedproperty N'MS_Description', N'单据号',      N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'NO';
+EXEC sp_addextendedproperty N'MS_Description', N'单据类型',    N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'BILL_TYPE';
+EXEC sp_addextendedproperty N'MS_Description', N'状态(0=草稿,1=已提交,2=已审核)', N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'STATUS';
+EXEC sp_addextendedproperty N'MS_Description', N'数量',        N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'QTY';
+EXEC sp_addextendedproperty N'MS_Description', N'金额',        N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'AMOUNT';
+EXEC sp_addextendedproperty N'MS_Description', N'备注',        N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'REMARK';
+EXEC sp_addextendedproperty N'MS_Description', N'单据日期',    N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN', N'BILL_DATE';
+EXEC sp_addextendedproperty N'MS_Description', N'工单ID(引用WorkOrder)', N'SCHEMA', N'dbo', N'TABLE', N'EXAMPLE_BILL', N'COLUMN',	N'WORK_ORDER_ID';
 EXEC sp_addextendedproperty N'MS_Description',	N'物料ID(引用Material)', 	N'SCHEMA',	N'dbo',
 	N'TABLE',
 	N'EXAMPLE_BILL',
@@ -269,6 +263,3 @@ CHECK ([STATUS] IN (0, 1, 2));
 5. **检查`MapTable`配置** → 确定表名
 
 6. **检查`HasIndex`** → 生成索引
-
----
-**当新建C#实体类时，请按照以上规范生成对应的SQL SERVER建表脚本。**

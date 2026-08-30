@@ -1,10 +1,3 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：MySQL建表规范·DataEntity默认列·类型映射·命名·COMMENT·索引
-
----
-
 # MySQL 建表规范
 
 ## 一、表结构通用模板
@@ -14,7 +7,7 @@
 ```sql
 CREATE TABLE `TABLE_NAME` (
     -- ========== 基础字段（DataEntity 继承） ==========
-    `ID`                BIGINT          NOT NULL AUTO_INCREMENT,  -- 主键ID（对应 C# long）
+    `ID`                BIGINT          NOT NULL AUTO_INCREMENT,  -- 主键ID（对应 C# double）
     `SYNC_ID`           BIGINT          NOT NULL,                 -- 同步ID
     `CREATE_BY`         BIGINT          NULL,                     -- 创建人ID
     `CREATE_DATE`       DATETIME        NOT NULL,                 -- 创建时间
@@ -65,14 +58,14 @@ SELECT COALESCE(MAX(`ID`), 0) + 1 AS NEXT_ID FROM `EXAMPLE_BILL`;
 
 | C# 类型 | MySQL 类型 | 说明 |
 |---------|------------|------|
-| `long` / `long?` | `BIGINT` | 主键、外键ID（对应 MSSQL `FLOAT` / Oracle `NUMBER(18,0)`，MySQL 为精确整数） |
+| `double` / `double?` | `BIGINT` | 主键、外键ID（对应 MSSQL `FLOAT` / Oracle `NUMBER(18,0)`，MySQL 为精确整数） |
 | `int` / `enum` | `INT` | 枚举值、状态码（对应 Oracle `NUMBER(10,0)`） |
 | `string`（单据号/用户名） | `VARCHAR(80)` | 短文本，按需调整长度 |
 | `string`（URL/长文本） | `VARCHAR(4000)` | 长文本（或 `TEXT` 根据场景） |
 | `decimal` | `DECIMAL(18,6)` | 金额、数量等精确值 |
 | `DateTime` | `DATETIME` | 日期时间（精确到秒，对应 Oracle `DATE` / MSSQL `DATETIME`） |
 | `bool` | `TINYINT(1)` | 布尔值（0/1，对应 MSSQL `BIT` / Oracle `NUMBER(1,0)`） |
-| `float` / `double` | `DOUBLE` | 近似浮点，尽量避免用于金额等精确场景 |
+| `float` | `DOUBLE` | 业务浮点，尽量避免用于金额等精确场景 |
 
 ## 四、命名规范
 
@@ -83,7 +76,7 @@ SELECT COALESCE(MAX(`ID`), 0) + 1 AS NEXT_ID FROM `EXAMPLE_BILL`;
 
 ### 列名
 - 全大写，下划线分隔
-- 避免使用 MySQL 保留字（如 `STATUS`、`RANK`、`GROUP` 等），必要时用反引号包裹
+- 避免使用 MySQL 保留字（如 `RANK`（8.0+）、`GROUP` 等），必要时用反引号包裹
 - 外键字段建议包含 `_ID` 后缀
 - 枚举字段建议包含状态含义的后缀或前缀
 
@@ -226,7 +219,3 @@ CHECK (`STATUS` IN (0, 1, 2));
 6. **检查`HasIndex`** → 生成索引
 
 7. **引擎与字符集** → 一律 `ENGINE = InnoDB DEFAULT CHARSET = utf8mb4`
-
----
-
-**当新建C#实体类时，请按照以上规范生成对应的MySQL建表脚本。**

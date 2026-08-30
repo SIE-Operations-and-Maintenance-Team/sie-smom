@@ -1,10 +1,3 @@
-> **类型**：精炼规则（个人经验整理，含明确的【禁止项 / 错误示例 / 正确示例】）
-> **来源**：个人实战经验整理（精炼自 SIE 平台实践）
-> **优先级**：高。
-> **覆盖范围**：PostgreSQL查询规范·C#实体->SQL类型映射·JOIN·枚举·分页·避坑
-
----
-
 # PostgreSQL 查询规范（基于实体映射）
 
 ## 一、C# 实体与 PostgreSQL 表结构映射关系
@@ -17,12 +10,12 @@
 // C# 基类（框架提供）
 public class DataEntity
 {
-    public long Id { get; set; }              // → ID BIGINT NOT NULL PK
-    public long SyncId { get; set; }          // → SYNC_ID BIGINT NOT NULL
-    public long? CreateBy { get; set; }       // → CREATE_BY BIGINT NULL
-    public DateTime? CreateDate { get; set; } // → CREATE_DATE TIMESTAMP NULL
-    public long? UpdateBy { get; set; }       // → UPDATE_BY BIGINT NULL
-    public DateTime? UpdateDate { get; set; } // → UPDATE_DATE TIMESTAMP NULL
+    public double Id { get; set; }            // → ID BIGINT NOT NULL PK
+    public double SyncId { get; set; }        // → SYNC_ID BIGINT NOT NULL
+    public double? CreateBy { get; set; }     // → CREATE_BY BIGINT NULL
+    public DateTime CreateDate { get; set; }  // → CREATE_DATE TIMESTAMP NOT NULL
+    public double? UpdateBy { get; set; }     // → UPDATE_BY BIGINT NULL
+    public DateTime UpdateDate { get; set; }  // → UPDATE_DATE TIMESTAMP NOT NULL
     public int? InvOrgId { get; set; }        // → INV_ORG_ID INT NULL
     public bool IsPhantom { get; set; }       // → IS_PHANTOM BOOLEAN NOT NULL DEFAULT FALSE
 }
@@ -30,12 +23,12 @@ public class DataEntity
 
 ```sql
 -- 查询时必须理解的默认字段映射
-SELECT B.ID,              -- long → BIGINT
-       B.SYNC_ID,          -- long → BIGINT
-       B.CREATE_BY,        -- long? → BIGINT NULL
-       B.CREATE_DATE,      -- DateTime? → TIMESTAMP NULL
-       B.UPDATE_BY,        -- long? → BIGINT NULL
-       B.UPDATE_DATE,      -- DateTime? → TIMESTAMP NULL
+SELECT B.ID,              -- double → BIGINT
+       B.SYNC_ID,          -- double → BIGINT
+       B.CREATE_BY,        -- double? → BIGINT NULL
+       B.CREATE_DATE,      -- DateTime → TIMESTAMP NOT NULL
+       B.UPDATE_BY,        -- double? → BIGINT NULL
+       B.UPDATE_DATE,      -- DateTime → TIMESTAMP NOT NULL
        B.INV_ORG_ID,       -- int? → INT NULL
        B.IS_PHANTOM        -- bool → BOOLEAN DEFAULT FALSE
 FROM example_bill B;
@@ -47,9 +40,9 @@ FROM example_bill B;
 
 | C# 类型 | PostgreSQL 类型 | 查询注意事项 |
 |---------|-----------------|-------------|
-| `long` / `long?` | `BIGINT` | 精确整数，直接等值匹配 |
+| `double` / `double?` | `BIGINT` | Id 类（主键/外键，整数语义）；精确整数亦可用 long，直接等值匹配 |
 | `int` / `int?` / `enum` | `INT`（`INTEGER`） | 枚举值查询直接用数字 |
-| `float` / `double` | `DOUBLE PRECISION` | 近似浮点，避免等值比较 |
+| `float` | `DOUBLE PRECISION` | 业务浮点，避免等值比较 |
 | `decimal` | `NUMERIC(18,6)` | **保留6位小数**，精确数值 |
 | `bool` | `BOOLEAN` | 值为 `TRUE` / `FALSE` |
 | `DateTime` / `DateTime?` | `TIMESTAMP` | 精确到微秒，查询用字符串字面量 |
@@ -79,12 +72,12 @@ FROM example_bill B;
 
 ## 二、查询中的类型匹配规范
 
-### 2.1 BIGINT 对应 long / long? —— 精确匹配
+### 2.1 BIGINT 对应 double / double?（Id 类）—— 精确匹配
 
 ```csharp
 // C# 实体
-public long Id { get; set; }           // → ID BIGINT NOT NULL
-public long? UpdateBy { get; set; }    // → UPDATE_BY BIGINT NULL
+public double Id { get; set; }         // → ID BIGINT NOT NULL
+public double? UpdateBy { get; set; }  // → UPDATE_BY BIGINT NULL
 ```
 
 ```sql
@@ -94,7 +87,7 @@ SELECT ID, NO FROM example_bill WHERE ID = 100001;
 -- ✅ UPDATE_BY 可空，用 IS NULL 判断
 SELECT ID, NO FROM example_bill WHERE UPDATE_BY IS NULL;
 
--- ✅ 批量查询（注意：IN 列表不得超过 1000 项，超过应改用分批查询或 ANY 数组）
+-- ✅ 批量查询（IN 列表过大时建议分批或 ANY 数组——性能考虑；PostgreSQL 无 Oracle 的 1000 项语法限制）
 SELECT ID, NO FROM example_bill WHERE ID IN (100001, 100002, 100003);
 
 -- ✅ 大集合可用数组 ANY 代替超长 IN
@@ -164,8 +157,8 @@ FROM example_bill;
 ```csharp
 // C# 实体
 public DateTime CreateDate { get; set; }       // → CREATE_DATE TIMESTAMP NOT NULL
-public DateTime? UpdateDate { get; set; }      // → UPDATE_DATE TIMESTAMP NULL
-public DateTime BillDate { get; set; }         // → BILL_DATE TIMESTAMP
+public DateTime UpdateDate { get; set; }       // → UPDATE_DATE TIMESTAMP NOT NULL
+public DateTime? BillDate { get; set; }        // → BILL_DATE TIMESTAMP NULL
 ```
 
 ```sql
@@ -175,10 +168,10 @@ FROM example_bill
 WHERE CREATE_DATE >= '2024-06-01 00:00:00'
   AND CREATE_DATE < '2024-07-01 00:00:00';
 
--- ✅ 可空的 UpdateDate
-SELECT ID, NO, UPDATE_DATE
+-- ✅ 可空的 BillDate
+SELECT ID, NO, BILL_DATE
 FROM example_bill
-WHERE UPDATE_DATE IS NOT NULL;
+WHERE BILL_DATE IS NOT NULL;
 
 -- ✅ 精确到日的查询（半开区间）
 SELECT ID, NO, BILL_DATE
@@ -205,7 +198,7 @@ public class ExampleBill : DataEntity
     public string No { get; set; }              // → NO VARCHAR(80)
     public BillStatus Status { get; set; }      // → STATUS INT
     public decimal Amount { get; set; }         // → AMOUNT NUMERIC(18,6)
-    public DateTime BillDate { get; set; }      // → BILL_DATE TIMESTAMP
+    public DateTime? BillDate { get; set; }       // → BILL_DATE TIMESTAMP NULL
     public WorkOrder WorkOrder { get; set; }    // → WORK_ORDER_ID BIGINT
     public Material Material { get; set; }      // → MATERIAL_ID BIGINT
 }
@@ -274,8 +267,8 @@ bill.UpdateDate = DateTime.Now;
 -- 对应的 SQL
 UPDATE example_bill
 SET IS_PHANTOM = TRUE,           -- bool → BOOLEAN = TRUE
-    UPDATE_BY = 1001,            -- long? → BIGINT
-    UPDATE_DATE = NOW()          -- DateTime? → TIMESTAMP
+    UPDATE_BY = 1001,            -- double? → BIGINT
+    UPDATE_DATE = NOW()          -- DateTime → TIMESTAMP
 WHERE ID = 100001;
 ```
 
@@ -434,7 +427,7 @@ FROM example_bill
 WHERE BILL_DATE >= '2024-01-01 00:00:00';
 ```
 
-> **⚠️ 最左前缀原则**：复合索引 `(STATUS, BILL_DATE)` 只有在条件包含前置列 `STATUS` 时才能生效。可通过 `EXPLAIN` 查看 `Seq Scan`（全表扫描）确认是否走索引。
+> **⚠️ 最左前缀原则**：复合索引 `(STATUS, BILL_DATE)` 只有在条件包含前置列 `STATUS` 时才能生效。可通过 `EXPLAIN` 查看：出现 `Seq Scan`（全表扫描）说明未走索引，`Index Scan` 才是走了索引。
 
 ### 6.3 模糊查询用 ILIKE（不区分大小写）
 
@@ -492,8 +485,8 @@ INSERT INTO example_bill (ID, SYNC_ID, ...)
 VALUES (nextval('seq_example_bill_id'), nextval('seq_example_bill_sync_id'), ...);
 
 -- 方式三：SERIAL 伪类型（旧写法，默认序列名 表名_列名_seq）
-INSERT INTO example_bill (SYNC_ID, ...)   -- 省略 ID，自动生成
-VALUES (1, ...);
+INSERT INTO example_bill (SYNC_ID, ...)   -- ID 由 SERIAL 默认序列自动生成，SYNC_ID 仍需显式提供
+VALUES (nextval('seq_example_bill_sync_id'), ...);
 ```
 
 ---
@@ -504,7 +497,7 @@ VALUES (1, ...);
 
 | C# 表达式 | SQL 条件 | 说明 |
 |-----------|----------|------|
-| `x.Id == 100001` | `ID = 100001` | `long` → `BIGINT` |
+| `x.Id == 100001` | `ID = 100001` | `double` → `BIGINT` |
 | `x.Status == BillStatus.Approved` | `STATUS = 1` | `enum` → `INT` |
 | `x.Status >= BillStatus.Approved` | `STATUS >= 1` | 枚举比较 → 数字比较 |
 | `x.Amount > 0` | `AMOUNT > 0` | `decimal` → `NUMERIC(18,6)` |
@@ -515,7 +508,7 @@ VALUES (1, ...);
 | `x.No.Contains("2024")` | `NO LIKE '%2024%'` | `string` → `VARCHAR` |
 | `x.No.Contains("2024")`（不区分大小写） | `NO ILIKE '%2024%'` | 模糊匹配忽略大小写 |
 | `x.No.StartsWith("BILL")` | `NO LIKE 'BILL%'` | `string` → `VARCHAR` |
-| `ids.Contains(x.Id)` | `ID IN (...)` / `ID = ANY (ARRAY[...])` | `long` 集合 → `BIGINT` 列表 |
+| `ids.Contains(x.Id)` | `ID IN (...)` / `ID = ANY (ARRAY[...])` | `double` 集合 → `BIGINT` 列表 |
 
 ### 8.2 排序映射
 
@@ -524,22 +517,22 @@ VALUES (1, ...);
 | `OrderByDescending(x => x.Id)` | `ORDER BY ID DESC` | 主键降序（最常用） |
 | `ThenBy(x => x.Status)` | `ORDER BY ID DESC, STATUS ASC` | 多字段排序 |
 | `OrderBy(x => x.CreateDate)` | `ORDER BY CREATE_DATE ASC` | 日期升序 |
-| 可空字段排序控制 | `ORDER BY UPDATE_DATE NULLS LAST` | PostgreSQL 原生支持 `NULLS FIRST / LAST` |
+| 可空字段排序控制 | `ORDER BY BILL_DATE NULLS LAST`（BILL_DATE 为可空列） | PostgreSQL 原生支持 `NULLS FIRST / LAST` |
 
 ### 8.3 SELECT 字段映射
 
 | C# 实体字段 | SQL 列 | 类型映射 |
 |------------|--------|---------|
-| `Id` | `ID` | `long` → `BIGINT` |
-| `SyncId` | `SYNC_ID` | `long` → `BIGINT` |
+| `Id` | `ID` | `double` → `BIGINT` |
+| `SyncId` | `SYNC_ID` | `double` → `BIGINT` |
 | `No` | `NO` | `string` → `VARCHAR(80)` |
 | `Status` | `STATUS` | `enum` → `INT` |
 | `Amount` | `AMOUNT` | `decimal` → `NUMERIC(18,6)` |
-| `BillDate` | `BILL_DATE` | `DateTime` → `TIMESTAMP` |
+| `BillDate` | `BILL_DATE` | `DateTime?` → `TIMESTAMP NULL` |
 | `IsPhantom` | `IS_PHANTOM` | `bool` → `BOOLEAN` |
 | `WorkOrder` | `WORK_ORDER_ID` | `IRefIdProperty` → `BIGINT` |
-| `CreateDate` | `CREATE_DATE` | `DateTime?` → `TIMESTAMP NULL` |
-| `UpdateBy` | `UPDATE_BY` | `long?` → `BIGINT NULL` |
+| `CreateDate` | `CREATE_DATE` | `DateTime` → `TIMESTAMP NOT NULL` |
+| `UpdateBy` | `UPDATE_BY` | `double?` → `BIGINT NULL` |
 
 ---
 
@@ -677,8 +670,8 @@ db.Update(bill);
 UPDATE example_bill
 SET STATUS = 1,                    -- enum → INT
     AMOUNT = 1000,                 -- decimal → NUMERIC(18,6)
-    UPDATE_BY = 1001,              -- long? → BIGINT
-    UPDATE_DATE = NOW()            -- DateTime? → TIMESTAMP
+    UPDATE_BY = 1001,              -- double? → BIGINT
+    UPDATE_DATE = NOW()            -- DateTime → TIMESTAMP
 WHERE ID = 100001
   AND IS_PHANTOM = FALSE;
 
@@ -697,7 +690,7 @@ WHERE T.BILL_ID = B.ID
   AND B.IS_PHANTOM = FALSE;
 ```
 
-> **⚠️ 关联更新语法差异**：PostgreSQL **不支持** MSSQL 的 `UPDATE ... FROM 子查询` 中的子查询直接跟随 FROM 的写法，必须将子查询放入 `FROM` 子句并加别名（`UPDATE 表 SET ... FROM (子查询) T WHERE T.关联列 = 表.列`）；也不同于 MySQL 的 `UPDATE ... JOIN` 语法。
+> **⚠️ 关联更新语法差异**：PostgreSQL 支持 `UPDATE 表 SET ... FROM (子查询) T WHERE T.关联列 = 表.列`（形式上与 MSSQL 相同，子查询须加别名）；不同于 MySQL 的 `UPDATE ... JOIN` 语法。
 
 ---
 
@@ -736,14 +729,14 @@ SELECT ID, NO FROM example_bill WHERE STATUS = 1;
 ### 10.4 DateTime 可空字段判断
 
 ```sql
--- ❌ 错误：UpdateDate 是 DateTime?，不能直接用等值判断
-SELECT ID, NO FROM example_bill WHERE UPDATE_DATE = NULL;
+-- ❌ 错误：BillDate 是 DateTime?，不能直接用等值判断
+SELECT ID, NO FROM example_bill WHERE BILL_DATE = NULL;
 
 -- ✅ 正确：NULL 判断使用 IS NULL
-SELECT ID, NO FROM example_bill WHERE UPDATE_DATE IS NULL;
+SELECT ID, NO FROM example_bill WHERE BILL_DATE IS NULL;
 
--- ✅ 正确：判断是否有过更新（C#: x.UpdateDate != null）
-SELECT ID, NO FROM example_bill WHERE UPDATE_DATE IS NOT NULL;
+-- ✅ 正确：判断是否已填值（C#: x.BillDate != null）
+SELECT ID, NO FROM example_bill WHERE BILL_DATE IS NOT NULL;
 ```
 
 ### 10.5 字符串转义
@@ -824,7 +817,7 @@ SELECT B.ID,                     -- DataEntity.Id
        B.NO,                     -- 业务字段
        B.STATUS,                 -- 业务字段（BillStatus 枚举 → INT）
        B.AMOUNT,                 -- 业务字段（decimal → NUMERIC(18,6)）
-       B.BILL_DATE               -- 业务字段（DateTime → TIMESTAMP）
+       B.BILL_DATE               -- 业务字段（DateTime? → TIMESTAMP NULL）
 FROM example_bill B
 WHERE B.IS_PHANTOM = FALSE
   AND B.STATUS = 1;
