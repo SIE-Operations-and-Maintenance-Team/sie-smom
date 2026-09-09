@@ -290,7 +290,7 @@ public class BaseDao<T> : IDao where T : Entity
 | 普通属性 | `P<T>.Register(e => e.Xxx)` | 直接属性，映射数据库基类字段（见第一节） |
 | 列表属性 | `P<T>.RegisterList(e => e.XxxList)` | 一对多子表；取值用 `GetLazyList` |
 | 引用属性 | `RegisterRefId` + `RegisterRef`（成对） | 一对一；ID 引用映射 DB 字段，实体引用默认懒加载 |
-| 视图属性 | `P<T>.RegisterView(e => e.Xxx, p => p.Ref.Code)` | 显示引用实体字段；JOIN 加载避 N+1；不可编辑；需 `EagerLoadOptions.LoadWithViewProperty()` |
+| 视图属性 | `P<T>.RegisterView(e => e.Xxx, p => p.Ref.Code)` | 显示引用实体字段；JOIN 加载避 N+1；不可编辑；需 `EagerLoadOptions.LoadWithViewProperty()`；**拉平路径必须全为引用属性+物理列终点，禁止嵌套另一视图属性**（如 `p => p.Assign.ShippingWarehouseId` 中后者是 Assign 的视图属性非物理列）——编译通过但 SQL 生成时被当作物理列，运行期报 `列名'XX'无效`（2026-09-04 发运订单特殊物料标识实测）；应改走自身引用链直达物理列 |
 | 只读属性 | `P<T>.RegisterReadOnly(e => e.Xxx, e => e.Compute(), 依赖属性)` | 内存计算；**禁止访问数据库（会 N+1）**；**依赖参数禁止传 `RefEntityProperty`（如 `ItemProperty`），必须传对应 `IRefIdProperty`（如 `ItemIdProperty`），否则框架运行时报错**（编译不拦截；2026-09-04 用户实测反馈）；**视图属性（如 `ItemName` 拉平自 `Item`）不必单独声明为依赖——其失效由源 `IRefIdProperty` 级联，只绑源 Id 即可**（用户确认：`ItemNameProperty` 也是 view 字段、数据来源 `ItemIdProperty`）；**`XxxProperty` 声明必须在全部同类依赖字段之后**（C# 静态字段按文本序初始化，读到未初始化的同类字段为 null → 空引用异常；基类字段访问会先触发基类初始化，不受顺序影响。稳妥做法：只读属性 region 放类尾，参照 `AsnDetail.cs:241`） |
 
 ## 八、引用属性与主从关系
