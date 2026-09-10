@@ -79,6 +79,41 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 11. **using 指令完整性**：每个 `.cs` 文件必须在文件顶部包含所有必需的 `using` 指令（`SIE.*`、`System.*`、`RT.Service`、`RF`、`DB` 等）。禁止遗漏导致编译错误，代码生成后必须确认编译通过。
 12. **FirstOrDefault / ToList 参数形态**：`FirstOrDefault` 只有 1 个参数重载，如需加载视图属性使用 `FirstOrDefault(new EagerLoadOptions().LoadWithViewProperty())`，禁止 `FirstOrDefault(null, ...)` 双参数形式。`ToList` 相反——`EagerLoadOptions` 是第 2 参数：`ToList(pagingInfo, new EagerLoadOptions().LoadWithViewProperty())`，勿按 `FirstOrDefault` 单参数形态套用。
 13. **Criteria 类独立文件**：Criteria 查询实体必须定义在独立 `.cs` 文件中，继承 `Criteria`，标注 `[QueryEntity]` 和 `[Serializable]`。禁止写在 Controller 或 ViewConfig 类内部。
+14. **数据传输类必须标注 `[Serializable]`**：凡是涉及数据传输的类（DTO / 基础数据结构 / 命令参数与结果 / 缓存与消息对象等）都必须在类上添加 `[Serializable]` 特性，保证序列化传输安全。实体类已含 `[RootEntity]` / `[ChildEntity]`（内含 `[Serializable]`）的无需重复标注，但纯数据传输类必须显式标注。
+
+```csharp
+/// <summary>
+/// 基础数据结构
+/// </summary>
+[Serializable]
+public class BaseData
+{
+    /// <summary>
+    /// ID
+    /// </summary>
+    public double Id { get; set; }
+
+    /// <summary>
+    /// 编号
+    /// </summary>
+    public string Code { get; set; }
+
+    /// <summary>
+    /// 名称
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <summary>
+    /// 楼层
+    /// </summary>
+    public int? Floor { get; set; }
+
+    /// <summary>
+    /// 楼层编码
+    /// </summary>
+    public string FloorCode { get; set; }
+}
+```
 
 ---
 

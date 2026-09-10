@@ -18,7 +18,7 @@ SMOM 是赛意自研框架，API 面广且无公开文档，AI 凭记忆写必�
 2. **照搬模式**：复用参考库的命名、基类、属性、参数顺序
 3. **找不到就明说**：参考库未覆盖的 API，明确告知「需查证」，不编造
 
-详见 `skills/sie-smom/SKILL.md` 第 2 节（防幻写协议）和第 3 节（13 条红线）。
+详见 `skills/sie-smom/SKILL.md` 第 2 节（防幻写协议）和第 3 节（14 条红线）。
 
 ## Installation
 
@@ -75,7 +75,7 @@ sie-smom/
 │   └── marketplace.json    ← marketplace 声明（plugins 列表）
 ├── skills/
 │   └── sie-smom/           ← 实际 skill（SKILL.md + references/ 01-23）
-│       ├── SKILL.md        ← Skill 入口（平台本质、防幻写协议、13 条红线、路由表）
+│       ├── SKILL.md        ← Skill 入口（平台本质、防幻写协议、14 条红线、路由表）
 │       └── references/     ← 参考底库（25 份：01-07、12 精炼规则 / 08-11、14-17 数据库规范 / 18-23 配方库）
 ├── README.md
 ├── CLAUDE.md

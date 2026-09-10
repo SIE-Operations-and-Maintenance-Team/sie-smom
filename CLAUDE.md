@@ -20,7 +20,7 @@ sie-smom/
 │   └── marketplace.json    ← marketplace 声明（plugins 列表）
 ├── skills/
 │   └── sie-smom/           ← 实际 skill（SKILL.md + references/ 01-23）
-│       ├── SKILL.md        ← Skill 入口（平台本质、防幻写协议、13 条红线、路由表）
+│       ├── SKILL.md        ← Skill 入口（平台本质、防幻写协议、14 条红线、路由表）
 │       └── references/     ← 参考底库（25 份：01-07、12 精炼规则 / 08-11、14-17 数据库规范 / 18-23 配方库）
 │           ├── 01-architecture.md ～ 17-postgresql-table.md
 │           └── 18-web-commands-*.md（4 份）～ 23-problems.md
@@ -38,7 +38,7 @@ sie-smom/
 AI 写 SMOM 代码前必须查参考底库，不臆造框架 API。所有结论标注来源。
 查证顺序：`skills/sie-smom/references/`（精炼、优先）→ 项目实际代码。
 
-### 13条强制规则（红线，skills/sie-smom/SKILL.md 第3节）
+### 14条强制规则（红线，skills/sie-smom/SKILL.md 第3节）
 1. 禁止前端直访数据库
 2. 禁止无条件全表查询
 3. 大集合 IN 查询必须分批（SplitContains）
@@ -52,6 +52,7 @@ AI 写 SMOM 代码前必须查参考底库，不臆造框架 API。所有结论�
 11. using 指令完整性（SIE.*、System.*、RT.Service、RF、DB）
 12. FirstOrDefault 仅单参数重载（EagerLoadOptions）
 13. Criteria 类独立文件（继承 Criteria，[QueryEntity] + [Serializable]）
+14. 数据传输类必须标注 [Serializable]
 
 ## 常用命令
 
