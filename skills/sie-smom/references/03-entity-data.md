@@ -358,6 +358,8 @@ protected override void ConfigMeta()
 
 > **注意**：业务实体通常继承 `DataEntity`（DataEntity 含 IS_PHANTOM/INV_ORG_ID/SYNC_ID 等默认列，见 SKILL.md 第6节）；直接继承 `Entity` 时需在 `ConfigMeta()` 手动 `EnablePhantoms/EnableInvOrg/EnableDataSync` 启用对应插件。**DataEntity 具体默认启用了哪些插件，拿不准时查框架源码，勿臆测。**
 
+> **INV_ORG_ID 默认注入机制**：DataEntity 子表的 INV_ORG_ID 列由框架**默认自动注入**（列映射 + 保存时自动填充组织值），实体代码**不要**手动注册 `InvOrgIdProperty`——手动注册与默认注入重复映射同列，运行时报 `ORMException: cannot add column INV_ORG_ID to table X, it already existed, maybe managed property mapping duplicated!`；显式 `Meta.EnableInvOrg()` 属冗余调用（默认已启用）。查询过滤同样**不要手写**组织 Where 条件——默认注入的实体在 `Query<T>()` 时框架**强制注入**组织过滤（`p.GetInvOrgId() == ...` / `p.InvOrgId == ...` 的组织条件一律多余）；只有 `DisableInvOrg()`+手动注册的实体（Enterprise 模式）才需要手写 `p.InvOrgId == RT.InvOrg || p.InvOrgId == 0`（EnterpriseController.cs:134 先例）。实体上读组织值用 `this.GetInvOrgId()`（扩展方法，需 `using SIE.Common.InvOrg;`，先例 ItemController.cs:125 / EnterpriseBehavior.cs:48）。确需 CLR 属性（如 `p.InvOrgId` 强类型引用）时的正确姿势是 **`Meta.DisableInvOrg()` 与手动注册 `InvOrgIdProperty` 成对出现**（Enterprise.cs:193+32、CatalogEx.cs:144+81、ApiLog、Employee 同款）——只注册不 Disable 必炸。
+
 ## 十、实体仓库查找 RF.Find
 
 ```csharp
