@@ -346,3 +346,4 @@ this.View.AssignAuthorize<SpecialItemMarkConfig>(typeof(Item));   // 权限跟�
 ```
 
 > 注意：该模式**不要**再在 Module.cs 注册 `WebModuleMeta`，否则菜单+按钮双入口。
+> 反向规则（常规独立功能页）：实体要在「菜单管理」中被引用，**必须**在 Module.cs `AddModules` 注册 `WebModuleMeta`，运行时配置无法引用未注册实体——漏注册则页面无任何入口（见 20 §五 菜单可见性红线）。

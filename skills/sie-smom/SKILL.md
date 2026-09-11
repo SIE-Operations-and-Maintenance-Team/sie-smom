@@ -114,6 +114,7 @@ public class BaseData
     public string FloorCode { get; set; }
 }
 ```
+15. **新增 Web 功能页必须注册菜单节点**：有独立 ViewConfig 的实体，必须在 `SIE.Web.<Module>/Module.cs` 的 `AddModules` 注册 `WebModuleMeta { EntityType, Label }`，否则「菜单管理」无法引用该功能、页面无任何入口——运行时配置只负责挂菜单组与授权，**不能**引用未注册实体（漏注册症状：代码齐全编译通过但菜单管理找不到）。仅"无菜单配置实体"模式（按钮入口 + `AssignAuthorize`）反向适用：**不要**注册，否则菜单+按钮双入口。详见 `04-web-viewconfig.md` 无菜单配置实体节 + `20-web-frontend-misc.md` §五 菜单可见性红线。
 
 ---
 

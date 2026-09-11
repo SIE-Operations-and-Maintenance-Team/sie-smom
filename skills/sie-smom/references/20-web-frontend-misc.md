@@ -196,6 +196,8 @@ namespace SIE.Web.Items
 }
 ```
 
+> **菜单可见性红线（2026-09 杰普特实证）**：Web 端功能页（有独立 ViewConfig 的实体）要出现在「菜单管理」的可引用清单里，**必须先在 Module.cs 的 `AddModules` 注册 `WebModuleMeta`**。运行时「菜单管理」只负责把**已注册**的功能节点挂到菜单组并授权，**不能引用未注册的实体**。漏注册的症状：页面代码齐全、编译通过，但菜单管理里找不到该功能、前端无入口——"走运行时配置所以不改代码"的假设不成立。仅"无菜单配置实体"（按钮入口 + `AssignAuthorize` 模式，见 04 §无菜单配置实体）反向适用：**不要**注册 `WebModuleMeta`，否则菜单+按钮双入口。
+
 **WebClient 工程**（启动入口）关键配置（appsettings.json）：`DataPortal.Url`（apihost 地址，`DataPortal.Mode=Remote` 必须配）、`DataPortal.Mode`（Local 直连数据库 / Remote 走服务中间件）、`Apollo`（配置中心，优先级 Apollo > 文件 > 默认值）、`JsClient_date_Format`（默认 "Y-m-d H:i:s"）、`RedisConnectionStrings`（配 SentinelInfo 后 Host 失效）、`DB.DataLimit`、`dev.isDebuggingEnabled`（true 返回错误堆栈）、`LoginCheckCodeEnabled`、`CookieAuthentication.Name/Interval`、`isEnableXssFilter`、MQueue 消息队列。
 
 ---
