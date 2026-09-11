@@ -62,9 +62,56 @@ public class RoutingRuleQueryer : Data.DataQueryer
 }
 ```
 
-### 1.3 view.execute
+### 1.3 view.execute（命令执行·数据传输形态）
 
-本质是调用 SIE.invokeCommand（`withIds/selectIds/withChildren/data/success/error/callback` 参数见 18 号文件各命令节）。
+本质是调用 `SIE.invokeCommand`（`withIds/selectIds/withChildren/data/success/error/callback` 参数见 18 号文件各命令节）。
+
+**前端 `data` 的形态决定后端 `ViewCommand<T>` 的泛型选型**，三种形态必须一一对应：
+
+| 形态 | 前端 data | 后端基类 | 后端取数方式 |
+|---|---|---|---|
+| ① 单个实体 | `data: entity.data`（表单实体） | `ViewCommand`（不带泛型） | `Excute(ViewArgs args, string scope)` 内 `args.Data.ToJsonObject<Item>()` |
+| ② 数组 / 集合 | `data: view.getSelectionIds()` 等基本类型数组 | `ViewCommand<double[]>`（泛型 = 数组类型） | `Excute(double[] args, string scope)`，直接使用 `args` |
+| ③ 自定义拼装 | `data: indata`（`indata.Data = Ext.encode({...})`） | `ViewCommand<ViewArgs>`（**必须带 `<ViewArgs>` 泛型**） | `Excute(ViewArgs args, string scope)` 内 `args.Data.ToJsonObject<TestViewArgs>()` |
+
+**③ 自定义拼装是易错点**：前端把自定义结构 `Ext.encode` 后塞进 `indata.Data` 传给命令，后端**必须声明 `ViewCommand<ViewArgs>`（带 `<ViewArgs>` 泛型）**，漏写泛型（直接 `ViewCommand`）会导致反序列化形态不符。拼装结构内用 `EntityList<Item>` 承接实体列表。
+
+**示例 ③ 自定义拼装**：
+
+```javascript
+execute: function (view, source) {
+    var indata = {};
+    var productModel = "";
+    var productModelLineCapacity = [];
+    indata.Data = Ext.encode({ A: productModel, B: productModelLineCapacity });
+    view.execute({
+        data: indata,
+        success: function (res) {
+        }
+    });
+}
+```
+
+```csharp
+public class TestCommand : ViewCommand<ViewArgs>   // 必须带 <ViewArgs> 泛型
+{
+    protected override object Excute(ViewArgs args, string scope)
+    {
+        var data = args.Data.ToJsonObject<TestViewArgs>();
+        return true;
+    }
+}
+
+/// <summary>
+/// 参数
+/// </summary>
+[Serializable]
+public class TestViewArgs
+{
+    public string A { get; set; }
+    public EntityList<Item> B { get; set; }
+}
+```
 
 ---
 

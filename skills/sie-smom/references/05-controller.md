@@ -144,6 +144,11 @@ var items = RT.Service.Resolve<CommonController>().GetDatas<Item>(p => p.State =
 | `ImportCommandBase`（导入） | CS | `GetImportCompleted()` / `GetImportHandleType()` |
 
 > 方法名 `Excute` 为框架实际拼写（非 `Execute`），重写时需一致。命令重写**必须加 meta 且不能换行**；前后端有交互时 JS/CS 全命名空间完全一致（见 `01-architecture.md` 命令类规范）。
+>
+> **`ViewCommand<T>` 泛型选型**（与前端 `view.execute({data})` 的数据形态一一对应，详见 `20-web-frontend-misc.md` 1.3 节）：
+> - 传单个实体 → `ViewCommand`（不带泛型），`Excute(ViewArgs args, ...)` 内 `args.Data.ToJsonObject<T>()` 反序列化；
+> - 传数组 / 集合（如 `getSelectionIds()`）→ `ViewCommand<double[]>`（泛型 = 数组类型），`Excute(double[] args, ...)` 直接使用 `args`；
+> - **传自定义拼装数据（前端 `indata.Data = Ext.encode({...})`）→ 必须 `ViewCommand<ViewArgs>`（带 `<ViewArgs>` 泛型）**，`Excute(ViewArgs args, ...)` 内 `args.Data.ToJsonObject<Xxx>()` 反序列化。漏写 `<ViewArgs>` 泛型会导致反序列化形态不符。
 
 ## 7. Criteria 类必须定义在独立文件中
 

@@ -129,7 +129,7 @@ public class BaseData
 | 实体建模 / 属性 / 标签 / 配置 | `03-entity-data.md` |
 | 实体验证规则 / DAO | `03-entity-data.md` |
 | 后端 Controller / 查询规范 | `05-controller.md` |
-| 命令（增删改查·保存·选择·导入导出） | `05-controller.md` + `18-web-commands-*.md`（Web 命令配方 22 篇，按任务域拆 4 份，见下面 4 行） |
+| 命令（增删改查·保存·选择·导入导出） | `05-controller.md` + `18-web-commands-*.md`（Web 命令配方 22 篇，按任务域拆 4 份，见下面 4 行）；view.execute 数据传输形态 / ViewCommand 泛型选型 → `20-web-frontend-misc.md` 1.3 节 |
 | Web ViewConfig / 视图方法 / AttachChildrenProperty / 查询条件（CriteriaQuery·ConditionQueryType 两模式） / 无菜单配置实体按钮入口 | `04-web-viewconfig.md` + `20-web-frontend-misc.md`（第十节 视图配置方法） |
 | 编辑器 `UseXxxEditor()`（布尔/文本/数值/日期/枚举/图片/分页查找/弹框/文本按钮） | `04-web-viewconfig.md` |
 | Web 前端（DataQueryer / ExtJS Layout·Controller / 通用工具 / Web Behavior） | `06-web-frontend.md` + `20-web-frontend-misc.md`（invokeCommand/事件/SIE.Msg/AutoUI/弹框/客制化三档/DM_ 机制） |
