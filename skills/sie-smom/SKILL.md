@@ -223,7 +223,7 @@ SIE.invokeDataQuery({type,method,params,token,success})  // 前端调后端 Data
 | string(短) | NVARCHAR(80) | VARCHAR2(80) | VARCHAR(80) | VARCHAR(80) |
 | string(长) | NVARCHAR(4000) | VARCHAR2(4000) | VARCHAR(4000) | VARCHAR(4000) |
 
-- **命名**：表/列全大写下划线；外键列加 `_ID` 后缀；约束 `PK_/IX_/CHK_/SEQ_` 前缀。
+- **命名**：表/列全大写下划线；外键列加 `_ID` 后缀；约束 `PK_/IX_/CHK_/SEQ_` 前缀。**列名由属性名自动推导，连续大写字母逐个拆分**（`RelatedSN`→`RELATED_S_N`，非 `RELATED_SN`）——手写 DDL 列名必须与推导结果一致，否则运行时报"标识符无效"（ORA-00904 等）；不一致时实体须 `MapColumn("实际列名")`。
 - **序列**：`SEQ_<表>_ID` START WITH 100000；`SEQ_<表>_SYNC_ID` START WITH 1；取值 MSSQL `NEXT VALUE FOR [dbo].[SEQ]`、Oracle `SEQ.NEXTVAL`、MySQL `AUTO_INCREMENT`（无序列对象）、PostgreSQL `IDENTITY` / `nextval('序列')`。
 - **差异速查**：当前时间 `GETDATE()` vs `SYSDATE` vs `NOW()`(MySQL) vs `NOW()`/`CURRENT_TIMESTAMP`(PostgreSQL)；NULL 兜底 `ISNULL` vs `NVL` vs `IFNULL` vs `COALESCE`；字符串前缀 `N'...'`(MSSQL Unicode) vs `'...'`；标识符 `[dbo].[表]` vs `表` vs `` `表` `` vs `"表"`；参数 `@name` vs `:name` vs `?name`(MySqlConnector) vs `@name`(Npgsql)；列注释 `sp_addextendedproperty` vs `COMMENT ON COLUMN` vs `COMMENT '...'` vs `COMMENT ON COLUMN`；分页 `OFFSET FETCH` vs `LIMIT m OFFSET n`。完整对照见 `references/16-postgresql-query.md` 第十二节。
 

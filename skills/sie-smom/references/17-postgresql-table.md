@@ -79,6 +79,7 @@ id BIGSERIAL PRIMARY KEY   -- 等价于 id BIGINT NOT NULL DEFAULT nextval('exam
 
 ### 列名
 - 全大写，下划线分隔
+- **列名由实体属性名自动推导：驼峰转全大写下划线时，连续大写字母逐个拆分**——`RelatedSN`→`RELATED_S_N`、`SourceSN`→`SOURCE_S_N`（不是直觉的 `RELATED_SN`）。手写建表 DDL 必须按推导结果命名列，否则实体查询运行时报`column "..." does not exist`；若列名无法按推导名建，实体侧必须 `MapColumn("实际列名")` 显式映射
 - 避免使用 PostgreSQL 保留字（如 `USER`、`ORDER`、`GROUP` 等），必要时用双引号包裹
 - 外键字段建议包含 `_ID` 后缀
 - 枚举字段建议包含状态含义的后缀或前缀
