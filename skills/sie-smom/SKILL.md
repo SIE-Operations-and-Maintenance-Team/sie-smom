@@ -64,6 +64,7 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 以下规则在任何 SMOM 代码中**无条件遵守**，违反即缺陷：
 
 1. **禁止前端直访数据库**：ViewConfig / Command / Behavior / DataQueryer / 前端 JS 中禁止 `DB.Query<T>` / `RF.Save` / `RF.GetById` / `Query<T>` 等；必须 `RT.Service.Resolve<XxxController>().方法()`。
+   > **机制**：Web 端（WebClient 进程）`RT.Service.Resolve<Controller>()` 返回远程代理，调用经 API 转发至 WebApiHost 进程执行。由此派生：① Controller 方法参数/返回值必须可序列化（EntityList/DTO/基元类型），**禁止委托/`Action` 参数**（无法过通道，运行时必炸）；② WebClient 侧开的 `DB.TransactionScope` 罩不住 ApiHost 侧落库（跨进程不共享事务），需同事务的多步操作必须收进**同一个 Controller 方法**内；③ Web Command 的 `DoSave` 只做一行转交，保存与事务编排全部在 Controller 方法内完成（配方见 `18-web-commands-form.md`）。
 2. **禁止无条件全表查询**：`Query<T>().ToList()` 必须至少带一个 `Where`；无条件的 `GetAll` 要抛 `ValidationException("请至少输入一个查询条件".L10N())`。
 3. **大集合 IN 查询必须分批**：`List.Contains` 用 `SplitContains` 或 `SplitDataExecute`；元素 >1000 时强制使用，避免超长 SQL IN。
 4. **每个查询必须带 `IS_PHANTOM = 0`**（除非明确查逻辑删除数据）；分页必须带 `ORDER BY`。**枚举类型属性必须用对应枚举类而非 `int`**：`Property<AccountState>` 而非 `Property<int>`。
