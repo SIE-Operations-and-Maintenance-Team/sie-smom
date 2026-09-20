@@ -134,7 +134,7 @@ public class BaseData
 | 命令（增删改查·保存·选择·导入导出） | `05-controller.md` + `18-web-commands-*.md`（Web 命令配方 22 篇，按任务域拆 4 份，见下面 4 行）；view.execute 数据传输形态 / ViewCommand 泛型选型 → `20-web-frontend-misc.md` 1.3 节 |
 | Web ViewConfig / 视图方法 / AttachChildrenProperty / 查询条件（CriteriaQuery·ConditionQueryType 两模式） / 无菜单配置实体按钮入口 | `04-web-viewconfig.md` + `20-web-frontend-misc.md`（第十节 视图配置方法） |
 | 编辑器 `UseXxxEditor()`（布尔/文本/数值/日期/枚举/图片/分页查找/弹框/文本按钮） | `04-web-viewconfig.md` |
-| Web 前端（DataQueryer / ExtJS Layout·Controller / 通用工具 / Web Behavior） | `06-web-frontend.md` + `20-web-frontend-misc.md`（invokeCommand/事件/SIE.Msg/AutoUI/弹框/客制化三档/DM_ 机制） |
+| Web 前端（DataQueryer / ExtJS Layout·Controller / 通用工具 / Web Behavior / 嵌入 JS 加载通道·全局前端补丁） | `06-web-frontend.md`（第六节 嵌入资源+通道机制：CommonModules 全局注入 / Commands 按需；6.2 覆盖框架 prototype 配方与双层 bundle 架构）+ `20-web-frontend-misc.md`（invokeCommand/事件/SIE.Msg/AutoUI/弹框/客制化三档/DM_ 机制） |
 | Behavior 行为 / 属性变更事件 / 附加子视图 / 提交事件 | `04-web-viewconfig.md` / `02-wpf.md` / `19-web-behaviors.md`（Web 行为配方 13 篇：变色/状态栏/分页/排序/统计行/命令时机等） |
 | Web 命令-表单保存 / 表单提交（局部·全页刷新） / 列表保存 | `18-web-commands-form.md`（4 篇） |
 | Web 命令-导入 / 导出（多表聚合·通用·自定义模板·子表·增强·ExporterSlim·填界面不落库） | `18-web-commands-import-export.md`（7 篇） |

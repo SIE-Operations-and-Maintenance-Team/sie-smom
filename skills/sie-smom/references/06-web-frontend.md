@@ -134,6 +134,36 @@ public class SaveXxxCommand : FormSaveCommand
 
 **未配置会导致 JS 文件不会被编译进程序集，运行时报错：No such Entity / No such class。**
 
+### 6.1 嵌入后的加载通道（决定 JS 何时何地执行）
+
+框架 `UseSIECommonJsHandler` 注册了 4 个动态合并端点，把**所有模块程序集**的嵌入 JS 按资源名分流合并：
+
+| 端点 | 合并规则 | 加载方式 |
+|------|----------|----------|
+| `/SIE.Entities.js` | 实体元数据类 | 页面加载 |
+| `/SIE.Modules.js` | 模块定义类 | 页面加载 |
+| `/SIE.CommonModules.js` | **资源名不含 `commands.`（忽略大小写）的其他 .js**（排除清单 `WebResourceConfig.GetFilterReourceNames` 之外） | **主框架与业务页 iframe 全局加载** |
+| `/SIE.Commands.js` | 资源名含 `commands.` 的 JS | 命令通道 |
+
+推论与选型：
+
+- **命令/Behavior JS**（放在 `Commands\`、`Behaviors\` 目录，被 ViewConfig 的 `UseCommands`/Behavior 名引用）按需加载（viewconfig 引用类名 → Ext Loader，参考十二节）；
+- **想全局执行的前端 JS**（框架级补丁、覆盖框架 prototype、全局工具挂载）：放进任意模块、路径**不得含 `commands.`**，即被合并进 `/SIE.CommonModules.js`，主框架和业务页 iframe 每页都会执行——无需任何页面引用或注册代码；
+- 命名约束是双向的：想走命令通道就放 `Commands\` 目录；想走公共通道就避开该字样（含大小写变体）。
+
+### 6.2 全局注入做框架前端补丁（已验证配方）
+
+适用：修复/覆盖框架自带前端行为（`sie.bundle.min.js` / `sie.common.bundle.min.js` 内的类，如 `SIE.autoUI.ViewFactory.prototype` 的方法）且无框架源码。相比直接改 bundle 文件或做 bundle 物理副本，嵌入资源方式零维护（框架升级不冲掉）。
+
+配方（2026-09-20 杰普特锁定列 GridSetting 修复实锤验证，案例见该项目 `doc/20260920-实施计划-锁定列排序后列显隐设置丢失修复.md`）：
+
+1. 新建自包含 IIFE 补丁 JS，放业务 Web 模块（如 `SIE.Web.MES\Common\XxxPatch.js`），开头守卫 `if (!window.SIE || ...) return;`，结尾覆盖目标（如 `SIE.autoUI.ViewFactory.prototype._onXxx = function...`）；
+2. csproj 按 6.0 节两处声明（`None Remove` + `EmbeddedResource`）；
+3. 时机安全：iframe 内 `/SIE.CommonModules.js` 在 `sie.common.bundle.min.js` 之后、grid 创建之前加载，覆盖 prototype 必然生效；
+4. 修改后须重新生成再启动（模块 DLL 输出至 `platform/smom/<tfm>/`，WebClient 引用该目录；本地调试只改不生成不生效）。
+
+前端页面加载架构（排查前端问题先分层）：主框架外壳加载物理文件 `/scripts/sie.bundle.min.js`；业务页全部在 iframe（`/page?entityType=...`）加载 DLL 内嵌资源 `/scripts/sie.common.bundle.min.js?v=<版本戳>`——**两层是独立 window，类不共享**，覆盖/劫持要分清目标在哪层（iframe 调试进 `iframe.contentWindow`）。
+
 ## 七、Web Behavior 规范
 使用静态扩展方法注册:
 
