@@ -155,7 +155,7 @@ public class SaveXxxCommand : FormSaveCommand
 
 适用：修复/覆盖框架自带前端行为（`sie.bundle.min.js` / `sie.common.bundle.min.js` 内的类，如 `SIE.autoUI.ViewFactory.prototype` 的方法）且无框架源码。相比直接改 bundle 文件或做 bundle 物理副本，嵌入资源方式零维护（框架升级不冲掉）。
 
-配方（2026-09-20 杰普特锁定列 GridSetting 修复实锤验证，案例见该项目 `doc/20260920-实施计划-锁定列排序后列显隐设置丢失修复.md`）：
+配方（实锤验证案例：锁定列 GridSetting 修复，覆盖 `ViewFactory.prototype` 两个方法合并 locked/normal 两区收列）：
 
 1. 新建自包含 IIFE 补丁 JS，放业务 Web 模块（如 `SIE.Web.MES\Common\XxxPatch.js`），开头守卫 `if (!window.SIE || ...) return;`，结尾覆盖目标（如 `SIE.autoUI.ViewFactory.prototype._onXxx = function...`）；
 2. csproj 按 6.0 节两处声明（`None Remove` + `EmbeddedResource`）；

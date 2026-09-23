@@ -124,6 +124,8 @@ gridPanel.removeColumn(colIndex - 1);  // 框架含行号列，索引需减 1
 
 **Api 开放接口**：方法标记 `[ApiService]`，参数 `[ApiParameter]`，返回 `[ApiReturn]`；运行 host / 部署后可在 API 查到对应方法、请求格式和返回值。
 
+> **红线：`[ApiService]`（及 dataportal 可调）方法禁止标 `[Obsolete]`**。框架 API/DataPortal 分派器**不注册 `[Obsolete]` 方法**——标了废弃等于把方法从对外分派表里下线，外部调用报 `类型[X]找不到方法[Y]`（分派逻辑在 SIE.Web.dll）。陷阱在于本仓库内零调用方时标记看似无害（进程内调用仅多一条编译警告），实际炸在调用方所在的服务端（典型：A 服务转发调 B 服务的 dataportal 方法，B 升级后方法被标废弃即断）。废弃意图用注释/内部文档表达，不落 `[Obsolete]` 特性。
+
 ---
 
 ## 七、原生 SQL 与存储过程（DbAccesser）

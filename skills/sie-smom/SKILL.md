@@ -81,6 +81,7 @@ description: SIE SMOM 平台开发专家（.NET 6.0 MES + SIE 自研框架）。
 12. **FirstOrDefault / ToList 参数形态**：`FirstOrDefault` 只有 1 个参数重载，如需加载视图属性使用 `FirstOrDefault(new EagerLoadOptions().LoadWithViewProperty())`，禁止 `FirstOrDefault(null, ...)` 双参数形式。`ToList` 相反——`EagerLoadOptions` 是第 2 参数：`ToList(pagingInfo, new EagerLoadOptions().LoadWithViewProperty())`，勿按 `FirstOrDefault` 单参数形态套用。
 13. **Criteria 类独立文件**：Criteria 查询实体必须定义在独立 `.cs` 文件中，继承 `Criteria`，标注 `[QueryEntity]` 和 `[Serializable]`。禁止写在 Controller 或 ViewConfig 类内部。
 14. **数据传输类必须标注 `[Serializable]`**：凡是涉及数据传输的类（DTO / 基础数据结构 / 命令参数与结果 / 缓存与消息对象等）都必须在类上添加 `[Serializable]` 特性，保证序列化传输安全。实体类已含 `[RootEntity]` / `[ChildEntity]`（内含 `[Serializable]`）的无需重复标注，但纯数据传输类必须显式标注。
+15. **`[ApiService]`（及 dataportal 可调）方法禁止标 `[Obsolete]`**：框架分派器**不注册 `[Obsolete]` 方法**——标记即把方法从对外分派表下线，外部调用报 `类型[X]找不到方法[Y]`；本仓库零调用方时看似无害（进程内仅编译警告），实际炸在调用方所在服务端（跨服务 dataportal 转发场景典型）。废弃意图用注释表达，详见 `07-general.md` §六。
 
 ```csharp
 /// <summary>
