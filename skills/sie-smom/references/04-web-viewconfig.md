@@ -232,7 +232,7 @@ internal class SpecialItemMarkConfigCriteriaViewConfig : WebViewConfig<SpecialIt
 }
 ```
 
-**⑤ csproj**：新增文件必须同步更新项目 `.csproj`（红线 5）；`.js` 还须同时配置 `EmbeddedResource` + `None Remove`（见 07 §五）。
+**⑤ csproj**：新增文件必须同步更新项目 `.csproj`（红线 6）；`.js` 还须同时配置 `EmbeddedResource` + `None Remove`（见 07 §五）。
 
 ## 六、ChildrenProperty 强关联子表规范
 

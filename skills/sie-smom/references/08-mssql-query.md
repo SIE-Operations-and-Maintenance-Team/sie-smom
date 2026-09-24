@@ -461,9 +461,44 @@ INSERT INTO [dbo].[EXAMPLE_BILL] (
 | `x.IsPhantom == true` | `[IS_PHANTOM] = 1` | `bool` → `BIT` |
 | `x.CreateDate >= startDate` | `[CREATE_DATE] >= '2024-01-01 00:00:00'` | `DateTime` → `DATETIME` |
 | `x.WorkOrder == null` | `[WORK_ORDER_ID] IS NULL` | `IRefIdProperty` 是否引用 |
-| `x.No.Contains("2024")` | `[NO] LIKE N'%2024%'` | `string` → `NVARCHAR`，注意 `N` 前缀 |
+| `x.No.Contains("2024")`（参数无 `%`） | `[NO] = N'2024'` | **框架重写：无 `%` 生成 `=` 精确匹配**，`string` → `NVARCHAR` |
+| `x.No.Contains("%2024%")`（显式 `%`） | `[NO] LIKE N'%2024%'` | **模糊匹配必须显式拼 `%`**，`string` → `NVARCHAR`，注意 `N` 前缀 |
 | `x.No.StartsWith("BILL")` | `[NO] LIKE N'BILL%'` | `string` → `NVARCHAR` |
 | `ids.Contains(x.Id)` | `[ID] IN (...)` | `double` 集合 → `FLOAT` 列表 |
+
+> **⚠️ 框架重写语义：`Contains` 不是标准 LINQ 模糊匹配**
+>
+> SIE 框架重写了 `Query<T>().Where()` 中字符串 `Contains` 的翻译：**参数中不含 `%` 时生成 `=` 精确匹配；只有参数显式包含 `%` 通配符时才生成 `LIKE` 模糊匹配**。
+>
+> ```csharp
+> query.Where(e => e.No.Contains(keyword));              // → NO = @keyword 精确匹配
+> query.Where(e => e.No.Contains("%" + keyword + "%"));  // → NO LIKE '%keyword%' 模糊
+> ```
+>
+> 佐证（SMOM.YXC 项目）：框架业务代码统一按 `"%" + x + "%"` 写法做模糊（`EmployeeController.cs:242`、`QrCodeParseRuleController.cs:137-138`、`ShippingOrderController.cs:1702` 等）；工具方法 `GetEntityContains` 的注释为"%Contains% 模糊匹配"（见 22 号文件）。
+> **误判后果**：把无 `%` 的 `Contains` 当 `LIKE '%x%'` 分析会得出错误结论（2026-09-24 误诊案例：`GetItemByCompanyMaterialNumber` 用 `Contains(companyMaterialNumber)` 被误判为"多物料模糊命中取错物料"，实际走精确匹配，物料解析从未出错）。
+
+### 8.1.1 Query 表达式支持的 SQL 函数（SIE.Domain.FunctionExtension，白名单）
+
+`Query<T>()` 的表达式（`Where` / `Select` / `OrderBy` 等）中可用的 **SQL 函数类扩展方法以 `SIE.Domain.FunctionExtension`（类注释"SQL函数扩展"）为唯一白名单**——**此处没有的函数方法一律不支持**（标准 LINQ 的其他 string/DateTime/Math 方法不会被翻译，如 `Replace`、`EndsWith`、`ToString`、`AddDays` 等）。方言差异由框架负责翻译（如 `NVL` 在 MSSQL 生成 `ISNULL`，见各方言文档差异表）。
+
+来源：`platform/nest/netstandard2.0/SIE.xml`（框架 XML 文档，`T:SIE.Domain.FunctionExtension` 成员清单，2026-09 核验）。
+
+| 扩展方法 | 重载形态 | 生成 SQL（MSSQL 视角） | 说明 |
+|----------|----------|------------------------|------|
+| `e.SQL<T>(sql)` / `e.SQL(sql)` | 参数 `SIE.Data.FormattedSql` | 原生 SQL 片段原样嵌入 | 万能兜底：清单外的需求用它写原生片段 |
+| `obj.COUNT()` | `object` | `COUNT(...)` | 聚合计数 |
+| `val.NVL(默认值)` | 泛型 `T, T`（值/可空值） | `ISNULL(...)` | 空值替换（Oracle 语义 NVL） |
+| `a.CONCAT(b)` | `string, string` | `+` / `CONCAT` | 字符串拼接 |
+| `s.UPPER()` / `s.LOWER()` | `string` | `UPPER(...)` / `LOWER(...)` | 大小写转换 |
+| `s.SUBSTR(start)` / `s.SUBSTR(start, len)` | `string, int[, int]` | `SUBSTRING(...)` | 子串（Oracle 风格命名） |
+| `s.LENGTH()` | `string` | `LEN(...)` | 字符串长度 |
+| `s.LTRIM()` / `s.RTRIM()` | `string` | `LTRIM(...)` / `RTRIM(...)` | 去首/尾空格 |
+| `val.SUM()` | `double` / `decimal` / `int`（含可空重载） | `SUM(...)` | 求和，6 个重载 |
+| `val.AVG()` | 同上 | `AVG(...)` | 平均，6 个重载 |
+| `val.MAX()` / `val.MIN()` | `DateTime` / `long` / `int` / `double` / `decimal` / `string`（含可空重载） | `MAX(...)` / `MIN(...)` | 极值，各 11 个重载 |
+
+**除本清单外，框架表达式翻译器另行支持的标准写法仅限**：比较/逻辑运算符（`==` `!=` `>` `<` `>=` `<=` `&&` `||`）、`x.No.Contains(...)`（语义见 8.1 警示块）、`x.No.StartsWith(...)`、`list.Contains(x.Id)`（→ `IN`）。其余方法出现即不被翻译，需求超出时改用 `e.SQL(...)` 原生片段或落到内存处理。
 
 ### 8.2 排序映射
 

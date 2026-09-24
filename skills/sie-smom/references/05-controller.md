@@ -22,13 +22,18 @@ public virtual EntityList<Item> GetItems(ItemCriteria criteria)
         throw new ArgumentNullException(nameof(criteria));
     var query = Query<Item>();
     if (criteria.Code.IsNotEmpty())
-        query.Where(e => e.Code.Contains(criteria.Code));
+        // 框架重写语义：Contains 参数无 % 为精确匹配，要模糊必须显式拼 "%...%"
+        query.Where(e => e.Code.Contains("%" + criteria.Code + "%"));
     if (criteria.Name.IsNotEmpty())
-        query.Where(e => e.Name.Contains(criteria.Name));
+        query.Where(e => e.Name.Contains("%" + criteria.Name + "%"));
     return query
         .ToList(criteria.PagingInfo,new EagerLoadOptions().LoadWithViewProperty());
 }
 ```
+
+**重要规则：`Contains` 无 `%` 是精确匹配，不是模糊**
+
+SIE 框架重写了 `Where()` 中字符串 `Contains` 的翻译：**参数不含 `%` 时生成 `=` 精确匹配；要模糊匹配必须显式拼 `"%" + 值 + "%"`**。写界面模糊查询条件时直接 `Contains(criteria.Code)` 得到的是等值查询（详见 08 号文档映射表警示块）。
 
 **重要规则：禁止无条件查询全表数据**
 
@@ -51,7 +56,7 @@ public virtual EntityList<Item> GetItems(ItemCriteria criteria)
 {
     var query = Query<Item>();
     if (criteria.Code.IsNotEmpty())
-        query.Where(e => e.Code.Contains(criteria.Code));
+        query.Where(e => e.Code.Contains("%" + criteria.Code + "%")); // 模糊需显式拼 %，无 % 为精确匹配
     if (criteria.State != null)
         query.Where(e => e.State == criteria.State);
     
@@ -205,7 +210,7 @@ else if (criteria.OrderInfoList.AnyExt())
 
 要点：
 - `OrderInfoList` 由前端列头点击自动填充（字段名/方向），后端直接 `OrderBy(criteria.OrderInfoList)` 应用
-- 分页查询必须带 `ORDER BY`（红线 4）：`OrderInfoList` 为空时给默认排序（如主键/创建时间）
+- 分页查询必须带 `ORDER BY`（红线 5）：`OrderInfoList` 为空时给默认排序（如主键/创建时间）
 - 集合判空优先用 Common 扩展 `.AnyExt()`（等价 `Count > 0` 的简写，来源：平台 Common 实际代码）
 
 ---

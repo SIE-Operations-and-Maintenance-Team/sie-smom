@@ -25,7 +25,7 @@ public class ApiLogCriteria : Criteria
 
 ### 1.0 `[Label]` 需要 `using SIE.ObjectModel`
 
-缺少 `using SIE.ObjectModel;` 时，所有 `[Label("中文名")]` 会报 CS0246（`LabelAttribute` 定义在该命名空间）。实体文件必备 using：`SIE`（[DisplayMember]/[NotDuplicate]/RT）、`SIE.Domain`（DataEntity/P<T>/DomainController）、`SIE.MetaModel`（[RootEntity]/Meta）、`SIE.ObjectModel`（[Label]/Criteria）、`System`。详见红线 11（using 完整性）。
+缺少 `using SIE.ObjectModel;` 时，所有 `[Label("中文名")]` 会报 CS0246（`LabelAttribute` 定义在该命名空间）。实体文件必备 using：`SIE`（[DisplayMember]/[NotDuplicate]/RT）、`SIE.Domain`（DataEntity/P<T>/DomainController）、`SIE.MetaModel`（[RootEntity]/Meta）、`SIE.ObjectModel`（[Label]/Criteria）、`System`。详见红线 12（using 完整性）。
 
 ### 1.1 属性 setter 禁止加业务逻辑（用 OnPropertyChanged）
 

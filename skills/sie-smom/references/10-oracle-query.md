@@ -455,9 +455,12 @@ INSERT INTO EXAMPLE_BILL (
 | `x.IsPhantom == true` | `IS_PHANTOM = 1` | `bool` → `NUMBER(1,0)` |
 | `x.CreateDate >= startDate` | `CREATE_DATE >= TO_DATE(...)` | `DateTime` → `DATE` |
 | `x.WorkOrder == null` | `WORK_ORDER_ID IS NULL` | `IRefIdProperty` 是否引用 |
-| `x.No.Contains("2024")` | `NO LIKE '%2024%'` | `string` → `VARCHAR2` |
+| `x.No.Contains("2024")`（参数无 `%`） | `NO = '2024'` | **框架重写：无 `%` 生成 `=` 精确匹配**（详见 08 号文档警示块），`string` → `VARCHAR2` |
+| `x.No.Contains("%2024%")`（显式 `%`） | `NO LIKE '%2024%'` | **模糊匹配必须显式拼 `%`**，`string` → `VARCHAR2` |
 | `x.No.StartsWith("BILL")` | `NO LIKE 'BILL%'` | `string` → `VARCHAR2` |
 | `ids.Contains(x.Id)` | `ID IN (...)` | `double` 集合 → `NUMBER(18,0)` 列表 |
+
+> Query 表达式可用的 SQL 函数白名单（`NVL`/`SUBSTR`/`SUM`/`AVG` 等，`SIE.Domain.FunctionExtension`）见 `08-mssql-query.md` §8.1.1——方言翻译由框架处理，清单外函数方法一律不支持。
 
 ### 8.2 排序映射
 
